@@ -3,7 +3,8 @@
 /data/*
 
 # Do not track heavy singularity images
-/singularity/images
+/singularity/images/*
 
-!data/.gitkeep
+!/data/.gitkeep
+!/singularity/images/.gitkeep
 
