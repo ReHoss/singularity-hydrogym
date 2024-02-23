@@ -1,5 +1,5 @@
 PATH_PARENT=$( cd "$(dirname "${BASH_SOURCE[0]}")" || exit ; pwd -P )
-PATH_CONTENT_ROOT="$PATH_PARENT/../.."
+PATH_CONTENT_ROOT="$PATH_PARENT/../../.."
 
 NAME_MOUNT_DIR="mount_dir"
 PATH_CONTAINER_CONTENT_ROOT="/home/firedrake/$NAME_MOUNT_DIR/project_root"
