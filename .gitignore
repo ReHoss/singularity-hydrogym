@@ -1,0 +1,9 @@
+.idea
+.venv
+data/*
+
+# Do not track heavy singularity images
+/singularity/images
+
+!data/.gitkeep
+
