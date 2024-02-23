@@ -1,6 +1,6 @@
 .idea
 .venv
-data/*
+/data
 
 # Do not track heavy singularity images
 /singularity/images
