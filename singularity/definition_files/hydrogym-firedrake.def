@@ -1,0 +1,69 @@
+Bootstrap: docker
+From: firedrakeproject/firedrake-vanilla:latest
+Stage: spython-base
+
+%labels
+authors="hosseinkhan"
+%post
+
+
+# Rename firedrake to user_firedrake as it is more descriptive as root
+#USER root
+#RUN usermod --login user_firedrake firedrake
+
+# Switch back to user_firedrake
+#USER user_firedrake
+
+# Source the firedrake environment
+PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT=/home/firedrake/firedrake/bin/activate
+URL_HYDROGYM=https://github.com/ReHoss/hydrogym.git@main
+
+/bin/bash -c "source $PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT && \
+pip install --upgrade pip && \
+pip install git+$URL_HYDROGYM && \
+pip install  \
+gymnasium \
+jsonschema \
+matplotlib \
+mlflow==1.27 \
+numpy \
+pandas \
+pyyaml \
+sb3-contrib \
+scipy \
+tensorboard \
+tqdm \
+"
+
+# Create a directory for mounting
+mkdir -p /home/firedrake/mount_dir/project_root/src \
+/home/firedrake/mount_dir/project_root/data
+
+
+# PRINT THE CURRENT ENVIRONMENT TO THE TERMINAL
+/bin/bash -c "echo 'Current python: $(which python)' && \
+echo 'Current pip: $(which pip)' && \
+echo 'Current python version: $(python --version)' && \
+echo 'Current pip version: $(pip --version)' && \
+echo 'Current pip list: $(pip list)'"
+
+# Firedrake change uid approach
+%post
+    su - root # USER root
+    usermod -u {{ USER_ID }} firedrake
+    groupmod -g {{ GROUP_ID }} firedrake
+
+#su -  firedrake # USER firedrake
+
+%environment
+export PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT=/home/firedrake/firedrake/bin/activate
+export URL_HYDROGYM=https://github.com/ReHoss/hydrogym.git@main
+
+
+%runscript
+#exec /bin/bash -l -c source /home/firedrake/firedrake/bin/activate && /bin/bash "$@"
+%startscript
+#exec /bin/bash -l -c source /home/firedrake/firedrake/bin/activate && /bin/bash "$@"
+
+%runscript
+exec /bin/bash -l
