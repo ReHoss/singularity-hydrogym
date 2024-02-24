@@ -3,7 +3,7 @@
 # The user and group IDs are passed in order to give the same permissions to the user in the container as on the host.
 
 PATH_PARENT=$( cd "$(dirname "${BASH_SOURCE[0]}")" || exit ; pwd -P )
-PATH_CONTENT_ROOT=$(realpath "$PATH_PARENT/../..")
+PATH_CONTENT_ROOT=$(realpath "$PATH_PARENT/../../..")
 
 NAME_SINGULARITY_DEFINITION_FILE="hydrogym-firedrake.def"
 PATH_SINGULARITY_DEFINITION_FILE_DIR="$PATH_CONTENT_ROOT"/singularity/definition_files
