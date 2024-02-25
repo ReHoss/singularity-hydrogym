@@ -1,7 +1,7 @@
 # Description: Build a container with the current user's UID and GID
 
 PATH_PARENT=$( cd "$(dirname "${BASH_SOURCE[0]}")" || exit ; pwd -P )
-PATH_CONTENT_ROOT="$PATH_PARENT/../../.."
+PATH_CONTENT_ROOT=$(realpath "$PATH_PARENT/../../..")
 PATH_DOCKERFILE_DIR="$PATH_CONTENT_ROOT"/docker
 TAG_IMAGE="hydrogym-firedrake"
 

@@ -39,7 +39,7 @@ else
   PATH_SINGULARITY_DEFINITION_FILE_TMP="$PATH_SINGULARITY_DEFINITION_FILE"
 fi
 
-NAME_IMAGE_SIF_FILE="hydrogym-firedrake-uid-$USER_ID-gid-$GROUP_ID.sif"
+NAME_IMAGE_SIF_FILE="hydrogym-firedrake_uid-${USER_ID}_gid-${GROUP_ID}_hostname-$(hostname).sif"
 PATH_SIF_FILE_DIR="$PATH_CONTENT_ROOT"/singularity/images
 PATH_SIF_FILE="$PATH_SIF_FILE_DIR"/"$NAME_IMAGE_SIF_FILE"
 
@@ -54,3 +54,6 @@ singularity build \
 if [ -n "$opt" ]; then
   rm -r "$TEMP_DIR"
 fi
+
+
+# https://github.com/apptainer/singularity/issues/5941

@@ -2,7 +2,7 @@
 # TODO: Add verbosity
 
 PATH_PARENT=$( cd "$(dirname "${BASH_SOURCE[0]}")" || exit ; pwd -P )
-PATH_CONTENT_ROOT="$PATH_PARENT/../../.."
+PATH_CONTENT_ROOT=$(realpath "$PATH_PARENT/../../..")
 
 PATH_SPYTHON_VENV_ACTIVATION_SCRIPT="$PATH_PARENT"/.venv/bin/activate
 

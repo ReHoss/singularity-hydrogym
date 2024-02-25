@@ -3,14 +3,13 @@ PATH_CONTENT_ROOT=$(realpath "$PATH_PARENT/../../..")
 
 NAME_MOUNT_DIR="mount_dir"
 PATH_CONTAINER_CONTENT_ROOT="/home/firedrake/$NAME_MOUNT_DIR/project_root"
-NAME_CONTAINER="hydrogym-firedrake.sif"
+NAME_CONTAINER="hydrogym-firedrake_nousernamespace_uid-1001_gid-1001_hostname-mecacpt80.sif"
 PATH_CONTAINER="$PATH_CONTENT_ROOT"/singularity/images/"$NAME_CONTAINER"
 
-singularity run \
+singularity --debug run \
   --no-home \
   --writable-tmpfs \
   --no-init \
-  --no-eval \
   --bind "$PATH_CONTENT_ROOT"/src:"$PATH_CONTAINER_CONTENT_ROOT"/src \
   --bind "$PATH_CONTENT_ROOT"/data:"$PATH_CONTAINER_CONTENT_ROOT"/data \
   "$PATH_CONTAINER"
@@ -20,3 +19,6 @@ singularity run \
 # --containall                    contain not only file systems, but also PID, IPC, and environment
 # --no-init                       do NOT start shim process with --pid
 # --no-eval                       do not shell evaluate env vars or OCI container CMD/ENTRYPOINT/ARGS
+
+# WARNING: --no-eval is not supported in Singularity 3.5 (Ruche Cluster)
+# Usernamespace stuff: https://github.com/apptainer/singularity/issues/5240
