@@ -1,11 +1,15 @@
 .idea
-.venv
 /data/*
 *.pyc
+
+
+# Ignore venv
+/venv/*
 
 # Do not track heavy singularity images
 /singularity/images/*
 
 !/data/.gitkeep
 !/singularity/images/.gitkeep
+!/venv/.gitkeep
 

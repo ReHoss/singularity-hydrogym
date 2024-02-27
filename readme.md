@@ -35,10 +35,10 @@ It is the preferable way to go.
 
 ### Installation
 Depending on the user needs, the following software are required:
-- Docker
-- Singularity
-- MLFlow
-
+- _Docker_
+- _Singularity_
+- _MLFlow_
+- _spython_: to convert Singularity Dockerfiles to Singularity images `.sif`
 
 TODO:
 - Issue update the repo for Firedrake warnings

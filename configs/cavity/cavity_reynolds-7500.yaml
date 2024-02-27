@@ -13,4 +13,4 @@ environment:
       dict_paraview_callback:
         interval: 10
       dict_log_callback:
-        interval: 10
+          interval: 10
