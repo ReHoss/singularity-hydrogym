@@ -80,10 +80,9 @@ def integrate_no_control(gym_env: hgym.FlowEnv,
 
 
 def main():
-    path_current_script = pathlib.Path(__file__).parent
+    path_current_script = pathlib.Path(__file__)
     path_project_root = path_current_script.parent.parent.parent
-    path_mlflow_uri = pathlib.Path(
-        path_project_root / "data" / "mlruns").resolve()
+    path_mlflow_uri = path_project_root / "data" / "mlruns"
 
     # Parsing arguments
     parser = argparse.ArgumentParser()
@@ -112,15 +111,16 @@ def main():
         print(f"Starting run {run.info.run_id}")
         print(f"Experiment ID: {run.info.experiment_id}")
 
-        # Create the path and directory where to store stable_baselines_3 data
+        # Create the path and directory where to store output data
         path_output_data = (f"{path_mlflow_uri}/{run.info.experiment_id}/"
                             f"{run.info.run_id}/output_data")
         # noinspection DuplicatedCode
         pathlib.Path(path_output_data).mkdir()
 
         dict_flattened = {key.split('.')[-1]: value for key, value in
-                          pd.json_normalize(dict_config).to_dict(
-                              orient='records')[0].items()}
+                          (pd.json_normalize(dict_config)
+                           .to_dict(orient='records')[0]
+                           .items())}
         for key, value in dict_flattened.items():
             mlflow.log_param(key, value)
 
