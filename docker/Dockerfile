@@ -34,11 +34,7 @@ RUN /bin/bash -c "source $PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT && \
     "
 
 # Create a directory for mounting
-#RUN mkdir -p /home/project_root/src /home/project_root/data
-#RUN /bin/bash -c "mkdir -p /home/project_root/src /home/project_root/data"
-#RUN #mkdir -p /mount_dir
-RUN mkdir -p /home/firedrake/mount_dir/project_root/src \
-    /home/firedrake/mount_dir/project_root/data
+RUN mkdir -p /home/firedrake/mount_dir/project_root/
 
 
 # PRINT THE CURRENT ENVIRONMENT TO THE TERMINAL

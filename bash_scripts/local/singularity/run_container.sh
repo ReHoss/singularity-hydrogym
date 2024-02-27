@@ -11,8 +11,7 @@ singularity run \
   --writable-tmpfs \
   --no-init \
   --no-eval \
-  --bind "$PATH_CONTENT_ROOT"/src:"$PATH_CONTAINER_CONTENT_ROOT"/src \
-  --bind "$PATH_CONTENT_ROOT"/data:"$PATH_CONTAINER_CONTENT_ROOT"/data \
+  --bind "$PATH_CONTENT_ROOT":"$PATH_CONTAINER_CONTENT_ROOT" \
   "$PATH_CONTAINER"
 
 # --no-mount strings              disable one or more 'mount xxx' options set in singularity.conf, specify absolute destination path to disable a bind path entry, or 'bind-paths' to disable all bind path entries.

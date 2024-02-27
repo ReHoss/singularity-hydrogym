@@ -36,8 +36,7 @@ tqdm \
 "
 
 # Create a directory for mounting
-mkdir -p /home/firedrake/mount_dir/project_root/src \
-/home/firedrake/mount_dir/project_root/data
+mkdir -p /home/firedrake/mount_dir/project_root/
 
 
 # PRINT THE CURRENT ENVIRONMENT TO THE TERMINAL
