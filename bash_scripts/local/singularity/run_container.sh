@@ -19,3 +19,6 @@ singularity run \
 # --containall                    contain not only file systems, but also PID, IPC, and environment
 # --no-init                       do NOT start shim process with --pid
 # --no-eval                       do not shell evaluate env vars or OCI container CMD/ENTRYPOINT/ARGS
+
+# WARNING: --no-eval is not supported in Singularity 3.5 (Ruche Cluster)
+# Usernamespace stuff: https://github.com/apptainer/singularity/issues/5240

@@ -7,10 +7,10 @@ NAME_CONTAINER="hydrogym-firedrake-uid-2771-gid-1030-mecacpt80.sif"
 PATH_CONTAINER="$PATH_CONTENT_ROOT"/singularity/images/"$NAME_CONTAINER"
 
 singularity run \
-  --debug \
   --no-home \
   --writable-tmpfs \
   --no-init \
+  --no-eval \
   --bind "$PATH_CONTENT_ROOT":"$PATH_CONTAINER_CONTENT_ROOT" \
   "$PATH_CONTAINER"
 

@@ -3,11 +3,10 @@ PATH_CONTENT_ROOT=$(realpath "$PATH_PARENT/../../..")
 
 NAME_MOUNT_DIR="mount_dir"
 PATH_CONTAINER_CONTENT_ROOT="/home/firedrake/$NAME_MOUNT_DIR/project_root"
-NAME_CONTAINER="hydrogym-firedrake-uid-1001-gid-1001.sif"
+NAME_CONTAINER="hydrogym-firedrake_nousernamespace_uid-1001_gid-1001_hostname-mecacpt80.sif"
 PATH_CONTAINER="$PATH_CONTENT_ROOT"/singularity/images/"$NAME_CONTAINER"
 
-singularity run \
-  --debug \
+singularity --debug run \
   --no-home \
   --writable-tmpfs \
   --no-init \
