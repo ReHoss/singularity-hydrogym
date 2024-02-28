@@ -29,7 +29,7 @@ def get_hydrogym_flow(name_flow: str):
 def get_path_initial_vectorfield(name_flow: str) -> str:
     assert name_flow in LIST_STR_FLOWS, "Invalid flow name"
     if name_flow == "cavity":
-        return (f"{PATH_PROJECT_ROOT}/data/cavity/initial_vector_field/"
+        return (f"{PATH_PROJECT_ROOT}/data/initial_vector_field/cavity"
                 f"reynolds-7500_mesh-coarse_checkpoint.h5")
     else:
         raise NotImplementedError("This flow does not have"
