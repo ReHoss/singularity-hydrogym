@@ -23,13 +23,16 @@ Locally, you can install this codebase by following these steps:
 
 For local development, Docker can be used.
 
+To build the Docker image, run the following script:
+
+`./singularity-hydrogym/bash_scripts/local/docker/build_container.sh`
+
+This scripts builds the Docker image from the Dockerfile located in `docker/`. It passes the `--build-arg` flag to the Docker build command to specify the UID of the host user running the script. This permits to give the same UID to the _firedrake_ user in the container, so that writing permissions from the container to the host are granted.
+
 Usually, Docker is not supported on HPC clusters.
 However, an equivalent solution is to use Singularity.
 The Docker images available in this repository are analogous to the Singularity images available in the `singularity/` folder.
 It can be used for local development and testing through development environments such as VSCode or PyCharm.
-
-
-
 
 ### Singularity
 The Singularity containers are the ones that should be used on HPC clusters.
@@ -84,6 +87,7 @@ TODO:
 - Make the Steady State solver script
 - Containers run on Ruche but not on local now ?
 - Sync with cluster
+- Add `pip install -e .` in the Dockerfile
 
 Ressources:
 - https://docs.archer2.ac.uk/user-guide/containers/#running-parallel-mpi-jobs-using-singularity-containers
