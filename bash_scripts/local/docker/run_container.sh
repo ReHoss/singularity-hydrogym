@@ -12,9 +12,14 @@ NAME_CONTAINER="hydrogym-firedrake"
 docker run \
   -it \
   --rm \
-  --mount type=bind,source="$PATH_CONTENT_ROOT"/src,target="$PATH_CONTAINER_CONTENT_ROOT"/src \
   --mount type=bind,source="$PATH_CONTENT_ROOT"/data,target="$PATH_CONTAINER_CONTENT_ROOT"/data \
+  --mount type=bind,source="$PATH_CONTENT_ROOT"/configs,target="$PATH_CONTAINER_CONTENT_ROOT"/configs \
   "$NAME_CONTAINER"
+
+
+# Legacy: It used to be necessary to mount the source code inside the container.
+#  --mount type=bind,source="$PATH_CONTENT_ROOT"/src,target="$PATH_CONTAINER_CONTENT_ROOT"/src \
+
 
   # --read-only: Mount the container's root filesystem as read-only to check compatibility with Singularity
   # Indeed, Singularity containers are read-only by default

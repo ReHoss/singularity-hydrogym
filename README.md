@@ -23,11 +23,21 @@ Locally, you can install this codebase by following these steps:
 
 For local development, Docker can be used.
 
-To build the Docker image, run the following script:
+To build the Docker image, run the following script (from the project root):
 
 `./singularity-hydrogym/bash_scripts/local/docker/build_container.sh`
 
 This scripts builds the Docker image from the Dockerfile located in `docker/`. It passes the `--build-arg` flag to the Docker build command to specify the UID of the host user running the script. This permits to give the same UID to the _firedrake_ user in the container, so that writing permissions from the container to the host are granted.
+
+To run the container run the following script (from the project root):
+
+`./singularity-hydrogym/bash_scripts/local/docker/run_container.sh`
+
+Now, inside the container you can perform the integration with this following example script:
+
+`python src/integration/main.py --yaml /home/firedrake/mount_dir/project_root/configs/cavity/cavity_reynolds-7500.yaml`
+
+Note that while `src/` is copied to the container file-system during the **build** phase of the Docker image, the `data/` and `configs/` directories are mounted in the container when running it. 
 
 Usually, Docker is not supported on HPC clusters.
 However, an equivalent solution is to use Singularity.

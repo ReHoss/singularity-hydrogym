@@ -13,14 +13,11 @@ LABEL authors="hosseinkhan"
 #RUN echo $(ls -la /home)
 
 # Source the firedrake environment
-ENV PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT=/home/firedrake/firedrake/bin/activate \
-    URL_HYDROGYM=https://github.com/ReHoss/hydrogym.git@main
+ENV PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT=/home/firedrake/firedrake/bin/activate
 
 RUN /bin/bash -c "source $PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT && \
     pip install --upgrade pip && \
-    pip install git+$URL_HYDROGYM && \
-    pip install  \
-                gymnasium \
+    pip install gymnasium \
                 jsonschema \
                 matplotlib \
                 mlflow==1.27 \
@@ -35,6 +32,17 @@ RUN /bin/bash -c "source $PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT && \
 
 # Create a directory for mounting
 RUN mkdir -p /home/firedrake/mount_dir/project_root/
+
+# Copy the package source code to the container
+COPY src /home/firedrake/mount_dir/project_root/src
+COPY pyproject.toml /home/firedrake/mount_dir/project_root/
+# Readme is needed by the build process
+COPY README.md /home/firedrake/mount_dir/project_root/
+
+WORKDIR /home/firedrake/mount_dir/project_root/
+# Install the package
+RUN /bin/bash -c "source $PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT && \
+    pip install -e ."
 
 
 # PRINT THE CURRENT ENVIRONMENT TO THE TERMINAL

@@ -9,7 +9,7 @@ V_ENV_NAME="venv_monitoring_tools"
 PATH_VENV="$PATH_CONTENT_ROOT"/venv/"$V_ENV_NAME"/bin/activate
 
 # Define the port to use for the MLFlow UI
-PORT=5000
+PORT=5002
 
 # Path of the "store", i.e., where the mlflow runs are stored
 PATH_BACKEND_STORE="$PATH_CONTENT_ROOT"/data/mlruns

@@ -6,6 +6,7 @@ build-backend = "hatchling.build"
 name = "singularity-hydrogym"
 version = "0.0.1"
 dependencies = [
+    "hydrogym @ git+https://github.com/ReHoss/hydrogym.git@main",
     "gymnasium",
     "jsonschema",
     "matplotlib",
