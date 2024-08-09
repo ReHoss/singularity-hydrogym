@@ -37,7 +37,7 @@ echo 'Current python version: $(python --version)' && \
 echo 'Current pip version: $(pip --version)' && \
 echo 'Current pip list: $(pip list)'"
 
-# Firedrake change uid approach
+# Firedrake chmod approach
 %post
     # Set firedrake directory useable by all users
     chmod -R o+rwx /home/firedrake

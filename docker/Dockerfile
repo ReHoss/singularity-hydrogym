@@ -105,6 +105,7 @@ RUN /bin/bash -c "echo 'Current python: $(which python)' && \
 USER root
 ARG USER_ID
 ARG GROUP_ID
+# TODO: Maybe set this at the top of the file is enough, and faster?
 RUN usermod -u $USER_ID firedrake
 RUN groupmod -g $GROUP_ID firedrake
 
