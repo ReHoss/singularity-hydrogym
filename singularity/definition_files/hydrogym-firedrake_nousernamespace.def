@@ -17,7 +17,7 @@ pip install  \
 gymnasium \
 jsonschema \
 matplotlib \
-mlflow==1.27 \
+mlflow==1.27.0 \
 numpy \
 pandas \
 pyyaml \

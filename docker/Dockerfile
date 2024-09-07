@@ -16,11 +16,11 @@ LABEL authors="hosseinkhan"
 ENV PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT=/home/firedrake/firedrake/bin/activate
 
 RUN /bin/bash -c "source $PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT && \
-    pip install --upgrade pip && \
+    pip install --upgrade pip==24.0 && \
     pip install gymnasium \
                 jsonschema \
                 matplotlib \
-                mlflow==1.27 \
+                mlflow==1.27.0 \
                 numpy \
                 pandas \
                 pyyaml \
