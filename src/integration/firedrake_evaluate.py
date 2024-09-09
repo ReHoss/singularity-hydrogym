@@ -1,4 +1,4 @@
-import firedrake as fd
+import firedrake as fd  # type: ignore
 
 
 def compute_vorticity(flow) -> tuple:
