@@ -14,7 +14,6 @@ from src.utils import utils
 import numpy as np
 import numpy.typing as npt
 
-# TODO: temporary path
 # TODO: tests
 
 
@@ -90,9 +89,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         self.path_hydrogym_checkpoint = path_hydrogym_checkpoint
         self.actuator_integration = actuator_integration
 
-        self.path_output_data = (
-            path_output_data  # TODO: create temp directory for output data
-        )
+        self.path_output_data = path_output_data
         self.check_or_create_path_output_data()
         # Set up the paraview callback
         self.paraview_callback_interval = paraview_callback_interval
@@ -104,7 +101,6 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         self.log_callback: Optional[hydrogym.firedrake.io.LogCallback]
         self.log_callback = self.get_log_callback()
 
-        # TODO: Clarify thing with the add_attributes
         self.dict_env_config = {
             "flow": self.hydrogym_flow,
             "flow_config": {
@@ -126,7 +122,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         # The state space is a 2d continuous domain ...
         # ... with the velocity field and the pressure field
         dim_x = int(self.flow.mesh.cell_set.size)
-        self.state_space = spaces.Box(  # TODO: Get the mesh size
+        self.state_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
             shape=(dim_x, 3),
@@ -255,7 +251,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         self, action: npt.NDArray[np.floating]
     ) -> tuple[
         npt.NDArray[np.floating], float, bool, bool, dict
-    ]:  # TODO: Check the dt behavior
+    ]:  # TODO: Implement semi-markovian
         """
         Step the environment forward in time.
 
@@ -310,7 +306,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             name_flow=self.name_flow,
             path_callbacks=path_callbacks,
             interval=self.paraview_callback_interval,
-        )  # TODO: Fix path
+        )
         return hydrogym_paraview_callback
 
     def get_log_callback(
@@ -336,7 +332,6 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
                 "Creating a temporary directory."
             )
             self.path_output_data = tempfile.TemporaryDirectory().name
-            # TODO: Check the path_output_data
         else:
             # Check if the directory exists with pathlib
             path_output_data = pathlib.Path(self.path_output_data)
