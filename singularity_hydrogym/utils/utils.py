@@ -4,19 +4,23 @@ import os
 import hydrogym
 from hydrogym import firedrake as hgym
 
-from src.integration import firedrake_evaluate
+import hydrogym.firedrake
+from singularity_hydrogym.integration import firedrake_evaluate
 
 from typing import Tuple, Callable, Type
 
 PATH_PROJECT_ROOT = pathlib.Path(__file__).parent.parent.parent
 LIST_STR_FLOWS = ["cylinder", "pinball", "cavity", "backward_facing_step"]
-LIST_STR_SOLVERS = ["IPCS"]
+LIST_STR_SOLVERS = ["semi_implicit_bdf", "LinearisedBDF"]
+LIST_MESHES = ["coarse", "medium", "fine"]
 
 
-def get_solver(name_solver: str) -> Type[hgym.solver.TransientSolver]:
-    assert name_solver in ["IPCS"], "Invalid solver name"
-    if name_solver == "IPCS":
-        return hgym.IPCS
+def get_solver(name_solver: str) -> Type[hydrogym.core.TransientSolver]:
+    assert name_solver in ["semi_implicit_bdf", "LinearisedBDF"], "Invalid solver name"
+    if name_solver == "semi_implicit_bdf":
+        return hydrogym.firedrake.SemiImplicitBDF  # pyright: ignore [reportAttributeAccessIssue]
+    elif name_solver == "LinearisedBDF":
+        return hydrogym.firedrake.LinearizedBDF  # pyright: ignore [reportAttributeAccessIssue]
     else:
         raise ValueError("Invalid solver name")
 
@@ -36,13 +40,15 @@ def get_hydrogym_flow(name_flow: str) -> Type[hydrogym.firedrake.FlowConfig]:
         raise ValueError("Invalid flow name")
 
 
-def get_path_initial_vectorfield(name_flow: str) -> str:
+def get_path_initial_vectorfield(name_flow: str) -> str | None:
     assert name_flow in LIST_STR_FLOWS, "Invalid flow name"
     if name_flow == "cavity":
         return (
             f"{PATH_PROJECT_ROOT}/data/initial_vector_field/cavity/"
             f"reynolds-7500_mesh-coarse_checkpoint.h5"
         )
+    elif name_flow in ["cylinder", "pinball", "backward_facing_step"]:
+        return None
     else:
         raise NotImplementedError(
             "This flow does not have" " an initial vectorfield yet"
@@ -54,7 +60,7 @@ def get_hydrogym_paraview_callback(
 ) -> hydrogym.firedrake.io.ParaviewCallback:
     assert name_flow in LIST_STR_FLOWS, "Invalid flow name"
 
-    if name_flow == "cavity":
+    if name_flow in ["pinball", "cavity"]:
         function_firedrake_postprocess = get_firedrake_postprocess(name_flow)[0]
         # noinspection PyUnresolvedReferences
         hydrogym_paraview_callback = hydrogym.firedrake.io.ParaviewCallback(
@@ -82,21 +88,37 @@ def get_hydrogym_log_callback(
         hydrogym_log_callback = hydrogym.firedrake.io.LogCallback(
             nvals=3,
             interval=interval,
-            filename=f"{path_callbacks}/log_callback.dat",  # TODO: .txt?
+            filename=f"{path_callbacks}/log_callback.txt",
             print_fmt=str_log_callback,
-            postprocess=function_firedrake_postprocess,
+            postprocess=function_firedrake_postprocess,  # pyright: ignore [reportArgumentType]
+        )
+    elif name_flow == "pinball":
+        function_firedrake_postprocess = get_firedrake_postprocess(name_flow)[1]
+        str_log_callback = "t: {0:0.2f},\t\t CL[0]: {1:0.3f},\t\t CL[1]: {2:0.03f},\t\t CL[2]: {3:0.03f}\t\t Mem: {4:0.1f}"
+        hydrogym_log_callback = hydrogym.firedrake.io.LogCallback(
+            nvals=4,
+            interval=interval,
+            filename=f"{path_callbacks}/log_callback.txt",
+            print_fmt=str_log_callback,
+            postprocess=function_firedrake_postprocess,  # pyright: ignore [reportArgumentType]
         )
     else:
         raise NotImplementedError("This flow does not have a log callback yet")
     return hydrogym_log_callback
 
 
-def get_firedrake_postprocess(name_flow: str) -> Tuple[Callable, Callable]:
+def get_firedrake_postprocess(name_flow: str) -> Tuple[Callable | None, ...]:
     assert name_flow in LIST_STR_FLOWS, "Invalid flow name"
     if name_flow == "cavity":
+        # First index is for the paraview callback, second index is for the log callback
         return (
-            firedrake_evaluate.compute_vorticity,
+            firedrake_evaluate.compute_vorticity_paraview,
             firedrake_evaluate.postprocess_cavity,
+        )
+    elif name_flow == "pinball":
+        return (
+            None,
+            firedrake_evaluate.postprocess_pinball,
         )
     else:
         raise NotImplementedError("This flow does not have a postprocess yet")
@@ -138,7 +160,7 @@ def create_hydrogym_dict_config(
             "restart": path_initial_vectorfield,
             "mesh": "coarse",
         },
-        "solver": hgym.IPCS,
+        "solver": hgym.SemiImplicitBDF,  # pyright: ignore [reportAttributeAccessIssue]
         "solver_config": {
             "dt": dt,
         },

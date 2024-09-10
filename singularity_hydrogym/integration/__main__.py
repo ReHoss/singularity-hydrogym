@@ -8,7 +8,7 @@ import yaml
 
 import hydrogym.firedrake as hgym
 
-from src.utils.utils import create_hydrogym_dict_config
+from singularity_hydrogym.utils.utils import create_hydrogym_dict_config
 
 
 def add_attributes(gym_env: hgym.FlowEnv) -> None:

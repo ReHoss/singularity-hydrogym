@@ -1,4 +1,4 @@
-import gym.spaces
+import firedrake  # pyright: ignore [reportMissingImports]
 import pathlib
 
 import logging
@@ -9,8 +9,8 @@ from matplotlib import pyplot as plt
 from typing import Optional, Type, Any
 import gymnasium
 from gymnasium import spaces
-from src.environments import abstract_interface
-from src.utils import utils
+from singularity_hydrogym.environments import abstract_interface
+from singularity_hydrogym.utils import utils
 import numpy as np
 import numpy.typing as npt
 
@@ -18,7 +18,7 @@ import numpy.typing as npt
 
 
 DICT_DEFAULT_INITIAL_CONDITION = {
-    "type": "fixed_on_attractor",
+    "type": "equilibrium",
     "std": 0.1,
 }
 
@@ -43,7 +43,8 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         path_hydrogym_checkpoint: Optional[str] = None,
         mesh: str = "coarse",
         actuator_integration: str = "explicit",
-        name_solver: str = "IPCS",
+        name_solver: str = "semi_implicit_bdf",
+        solver_dt=0.0001,
         paraview_callback_interval: int = 10,
         log_callback_interval: int = 10,
         path_output_data: Optional[str] = None,
@@ -52,22 +53,29 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         Constructor for the Cavity environment.
         """
 
-        # self._check_arguments(  # TODO: Check that
-        #     max_control=max_control,
-        #     reynolds=reynolds,
-        #     dt=dt,
-        #     dtype=dtype,
-        #     control_penalty=control_penalty,
-        #     seed=seed,
-        #     interdecision_time_dist=interdecision_time_dist,
-        #     dict_initial_condition=dict_initial_condition,
-        # )
+        self._check_arguments(
+            name_flow=name_flow,
+            max_control=max_control,
+            reynolds=reynolds,
+            dt=dt,
+            dtype=dtype,
+            control_penalty=control_penalty,
+            interdecision_time_dist=interdecision_time_dist,
+            dict_initial_condition=dict_initial_condition,
+            path_hydrogym_checkpoint=path_hydrogym_checkpoint,
+            mesh=mesh,
+            actuator_integration=actuator_integration,
+            name_solver=name_solver,
+            solver_dt=solver_dt,
+            paraview_callback_interval=paraview_callback_interval,
+            log_callback_interval=log_callback_interval,
+            path_output_data=path_output_data,
+        )
 
         self.name_flow = name_flow
 
         np_dtype = np.dtype(dtype)
         assert np_dtype.type in [np.float32, np.float64], "Only float32/64 supported"
-        assert isinstance(np_dtype, np.floating)
         self.np_dtype = np_dtype
 
         self.hydrogym_flow = utils.get_hydrogym_flow(name_flow)
@@ -75,13 +83,14 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             name_flow=name_flow
         )
         self.dt = dt
+        self.solver_dt = solver_dt
         self.max_control = max_control
 
         self.control_penalty = control_penalty
         self.name_solver = name_solver
-        self.solver_class: Type[
-            hydrogym.firedrake.solver.TransientSolver
-        ] = utils.get_solver(name_solver=self.name_solver)  # Hardcoded
+        self.solver_class: Type[hydrogym.core.TransientSolver] = utils.get_solver(
+            name_solver=self.name_solver
+        )
 
         self.reynolds = reynolds
         self.mesh = mesh
@@ -111,7 +120,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             },
             "solver": self.solver_class,
             "solver_config": {
-                "dt": self.dt,
+                "dt": self.solver_dt,
             },
             "callbacks": [self.paraview_callback, self.log_callback],
         }
@@ -121,12 +130,12 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
 
         # The state space is a 2d continuous domain ...
         # ... with the velocity field and the pressure field
-        dim_x = int(self.flow.mesh.cell_set.size)
+        dim_x = int(self.flow.mesh.cell_set.size)  # TODO: flow.mixed_space.dim() check
         self.state_space = spaces.Box(
             low=-np.inf,
             high=np.inf,
             shape=(dim_x, 3),
-            dtype=self.np_dtype,
+            dtype=self.np_dtype.type,
         )
 
         # Patch the spaces to Gymnasium
@@ -155,7 +164,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         else:
             self.dict_initial_condition = dict_initial_condition
         assert self.dict_initial_condition["type"] in [
-            "fixed_on_attractor",
+            "equilibrium",
         ], "Initial condition type must be zero or nonzero"
 
         # The below interface creates the mandatory attributes
@@ -207,7 +216,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         t0 = 0.0
         # if options is None:
         #     raise NotImplementedError
-        #     if self.dict_initial_condition["type"] == "fixed_on_attractor":
+        #     if self.dict_initial_condition["type"] == "equilibrium":
         #         self.q0 = self.hydrogym_flow.get_attractor()
         #         self.q0 = self.q0 + np.random.normal(
         #             scale=self.dict_initial_condition["std"],
@@ -234,7 +243,20 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         # TODO: Implement the noise on the initial condition self.q0 for a proper reset
         # TODO: Check the dtypes
         # Reset the environment
-        tuple_obs = hydrogym.FlowEnv.reset(self)
+
+        # --- Hack based exactly on the internal FlowEnv reset method
+        # --- only one line is added to customise the flow reset
+
+        # tuple_obs = hydrogym.FlowEnv.reset(self)
+        self.iter = 0
+        # That updates q0
+        self.set_initial_condition()
+        self.flow.reset(q0=self.q0)  # pyright: ignore
+        self.solver.reset()
+        tuple_obs = self.flow.get_observations()
+
+        # --- End of the hack
+
         # Cast the observation to the right dtype
         # From tuple to array
         self._array_observation = np.array(tuple_obs, dtype=self.np_dtype)
@@ -263,8 +285,25 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         """
         # Check if the action is valid
         assert self.action_space.contains(action), "Action not valide (dtype?)."
+
+        # Get the common divisor of the dt and the solver_dt
+        # This is a hack to avoid changing the hydrogym interface
+        number_of_internal_steps = int(self.dt / self.solver_dt)
+        # assert number_of_internal_steps >= 1, "The number of internal steps must be +"
+        if number_of_internal_steps < 1:
+            raise ValueError("The number of internal steps must be positive")
+
+        tuple_obs: tuple[np.floating, np.floating, np.floating, np.floating]
+        reward: float
+        done: bool
+        dict_info: dict
+
+        for _ in range(number_of_internal_steps - 1):
+            hydrogym.FlowEnv.step(self, action)
+        tuple_obs, reward, done, dict_info = hydrogym.FlowEnv.step(self, action)  # pyright: ignore [reportAssignmentType]
+        # Suppressed above warning due to typing error
+
         # The obs vector returned has a tuple format
-        tuple_obs, reward, done, dict_info = hydrogym.FlowEnv.step(self, action)
         # Cast the observation to the right dtype
         # From tuple to array
         self._array_observation = np.array(tuple_obs, dtype=self.np_dtype)
@@ -364,8 +403,8 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
     ) -> float:
         raise NotImplementedError("The cost function is not implemented yet here")
 
-    def _convert_gym_spaces_box_gymnasium(
-        self, gym_space: gym.spaces.Box
+    def _convert_dtype_gym_spaces_box(
+        self, gym_space: gymnasium.spaces.Box
     ) -> gymnasium.spaces.Box:
         """
         Patch the gym.spaces.Box to allow for the dtype attribute.
@@ -375,7 +414,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             high=gym_space.high,
             shape=gym_space.shape,
             # Notably, the dtype attribute is modified voluntarily here
-            dtype=self.np_dtype,
+            dtype=self.np_dtype.type,
         )
         return gymnasium_space
 
@@ -384,18 +423,15 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         """
         Patch the gym.spaces.Box to allow for the dtype attribute.
         """
-        assert isinstance(self.state_space, gym.spaces.Box)
-        assert isinstance(self.action_space, gym.spaces.Box)
-        assert isinstance(self.observation_space, gym.spaces.Box)
 
-        self.state_space: gymnasium.spaces.Box = self._convert_gym_spaces_box_gymnasium(
+        self.state_space: gymnasium.spaces.Box = self._convert_dtype_gym_spaces_box(
             self.state_space
         )
-        self.action_space: gymnasium.spaces.Box = (
-            self._convert_gym_spaces_box_gymnasium(self.action_space)
+        self.action_space: gymnasium.spaces.Box = self._convert_dtype_gym_spaces_box(
+            self.action_space
         )
         self.observation_space: gymnasium.spaces.Box = (
-            self._convert_gym_spaces_box_gymnasium(self.observation_space)
+            self._convert_dtype_gym_spaces_box(self.observation_space)
         )
 
     def _patch_flow_attributes(self) -> None:
@@ -405,25 +441,140 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         # Add the attributes to the environment for logging (callback)
         setattr(self.flow, "dt", self.dt)
 
+    def set_initial_condition(self) -> None:
+        """
+        Set the initial condition of the environment.
+        """
+        if self.dict_initial_condition["type"] == "equilibrium":
+            fd_rng = firedrake.randomfunctiongen.Generator(
+                firedrake.randomfunctiongen.PCG64(seed=1234)
+            )
+
+            path_file_h5: str = self.get_initial_condition_file()
+            noise_std = self.dict_initial_condition["std"]
+            self.flow.load_checkpoint(filename=path_file_h5)
+            # noinspection PyUnresolvedReferences
+            self.flow.q += fd_rng.normal(self.flow.mixed_space, 0.0, noise_std)  # pyright: ignore [reportAttributeAccessIssue]
+            self.flow.q0 = self.flow.q  # pyright: ignore [reportAttributeAccessIssue]
+            # Warning suppressed since it is wrongly initialized
+        else:
+            raise ValueError("Invalid initial condition type")
+
+    def get_initial_condition_file(self) -> str:
+        """
+        Get the initial condition file.
+        """
+        if self.dict_initial_condition["type"] == "equilibrium":
+            path_file_h5 = (
+                f"{utils.PATH_PROJECT_ROOT}/data/steady_state/{self.name_flow}/"
+                f"{self.name_flow}_{int(self.reynolds)}_{self.mesh}_none/"
+                f"{int(self.reynolds)}_steady.h5"
+            )
+
+            # Check if the file exists
+            if not pathlib.Path(path_file_h5).exists():
+                raise FileNotFoundError(
+                    f"The file {path_file_h5} which contains"
+                    f" the initial condition does not exist."
+                )
+            return path_file_h5
+
+        else:
+            raise ValueError("Invalid initial condition type")
+
+        # return
+
+    @staticmethod
+    def _check_arguments(
+        name_flow: str,
+        max_control: float,
+        reynolds: float,
+        dt: float,
+        dtype: str,
+        control_penalty: float,
+        interdecision_time_dist: str,
+        dict_initial_condition: Optional[dict],
+        path_hydrogym_checkpoint: Optional[str],
+        mesh: str,
+        actuator_integration: str,
+        name_solver: str,
+        solver_dt: float,
+        paraview_callback_interval: int,
+        log_callback_interval: int,
+        path_output_data: Optional[str],
+    ) -> None:
+        """
+        Check the arguments of the constructor.
+        """
+        assert isinstance(name_flow, str), "name_flow must be a string"
+        assert isinstance(max_control, float), "max_control must be a float"
+        assert isinstance(reynolds, float), "reynolds must be a float"
+        assert isinstance(dt, float), "dt must be a float"
+        assert dtype in ["float32", "float64"], "dtype must be float32 or float64"
+        assert isinstance(control_penalty, float), "control_penalty must be a float"
+
+        assert interdecision_time_dist in [
+            "constant",
+            "exponential",
+        ], "interdecision_time_dist must be constant or exponential"
+
+        if dict_initial_condition is not None:
+            assert isinstance(
+                dict_initial_condition, dict
+            ), "dict_initial_condition must be a dict."
+
+        if path_hydrogym_checkpoint is not None:
+            assert isinstance(
+                path_hydrogym_checkpoint, str
+            ), "path_hydrogym_checkpoint must be a string."
+
+        assert mesh in ["coarse", "medium", "fine"], "mesh must be coarse or fine."
+        assert actuator_integration in [
+            "explicit",
+            "implicit",
+        ], "actuator_integration must be explicit or implicit."
+        assert name_solver in [
+            "semi_implicit_bdf",
+            "explicit_euler",
+        ], "name_solver must be semi_implicit_bdf or explicit_euler."
+        assert isinstance(solver_dt, float), "solver_dt must be a float."
+        assert isinstance(
+            paraview_callback_interval, int
+        ), "paraview_callback_interval must be an int."
+        assert isinstance(
+            log_callback_interval, int
+        ), "log_callback_interval must be an int."
+        if path_output_data is not None:
+            assert isinstance(
+                path_output_data, str
+            ), "path_output_data must be a string."
+
+        # Both dt should have a common divisor
+        assert dt > 0, "dt must be positive."
+        assert solver_dt > 0, "solver_dt must be positive."
+        assert dt >= solver_dt, "dt must be greater than or equal to solver_dt."
+        assert dt % solver_dt == 0, "dt and solver_dt must have a common divisor."
+
 
 if __name__ == "__main__":
 
     def main():
         # Test the Cavity environment
         seed = 0
-        name_flow = "cavity"
+        name_flow = "pinball"
         max_control = 1.0
-        reynolds = 7500.0
-        dt = 0.0001
+        reynolds = 10.0
+        dt = 0.01
         dtype = "float32"
         control_penalty = 0.0
         interdecision_time_dist = "constant"
         dict_initial_condition = None
         path_hydrogym_checkpoint = None
         mesh = "coarse"
-        actuator_integration = "explicit"
-        name_solver = "IPCS"
-        paraview_callback_interval = 10000
+        actuator_integration = "implicit"
+        name_solver = "semi_implicit_bdf"
+        solver_dt = 0.01
+        paraview_callback_interval = 5
         log_callback_interval = 100
         path_output_data = None
 
@@ -441,14 +592,16 @@ if __name__ == "__main__":
             mesh=mesh,
             actuator_integration=actuator_integration,
             name_solver=name_solver,
+            solver_dt=solver_dt,
             paraview_callback_interval=paraview_callback_interval,
             log_callback_interval=log_callback_interval,
             path_output_data=path_output_data,
         )
 
-        n_steps = 10000
+        n_steps = 50
         # Generate a trajectory and plot it
-        trajectory = np.zeros((n_steps, 1))
+        dim_obs = env.observation_space.shape[0]
+        trajectory = np.zeros((n_steps, dim_obs))
         for i in range(n_steps):
             assert isinstance(env.action_space, gymnasium.spaces.Box)
             action_ = env.action_space.sample() * 0.0
