@@ -1,4 +1,4 @@
-FROM firedrakeproject/firedrake-vanilla:latest
+FROM firedrakeproject/firedrake-vanilla:2024-04
 LABEL authors="hosseinkhan"
 
 
@@ -18,6 +18,7 @@ ENV PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT=/home/firedrake/firedrake/bin/activate
 RUN /bin/bash -c "source $PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT && \
     pip install --upgrade pip==24.0 && \
     pip install gymnasium \
+                git+https://github.com/ReHoss/hydrogym.git@feature/add_back_coarse_meshes \
                 jsonschema \
                 matplotlib \
                 mlflow==1.27.0 \
@@ -34,15 +35,20 @@ RUN /bin/bash -c "source $PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT && \
 RUN mkdir -p /home/firedrake/mount_dir/project_root/
 
 # Copy the package source code to the container
-COPY src /home/firedrake/mount_dir/project_root/src
-COPY pyproject.toml /home/firedrake/mount_dir/project_root/
+#COPY src /home/firedrake/mount_dir/project_root/src
+#COPY pyproject.toml /home/firedrake/mount_dir/project_root/
 # Readme is needed by the build process
-COPY README.md /home/firedrake/mount_dir/project_root/
+#COPY README.md /home/firedrake/mount_dir/project_root/
 
-WORKDIR /home/firedrake/mount_dir/project_root/
-# Install the package
-RUN /bin/bash -c "source $PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT && \
-    pip install -e ."
+WORKDIR /home/firedrake/mount_dir/project_root
+
+# Set the PYTHONPATH
+ENV PYTHONPATH="/home/firedrake/mount_dir/project_root:$PYTHONPATH"
+
+
+# Install the package  # TODO: Set back?
+#RUN /bin/bash -c "source $PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT && \
+#    pip install -e ."
 
 
 # PRINT THE CURRENT ENVIRONMENT TO THE TERMINAL
@@ -110,5 +116,7 @@ RUN usermod -u $USER_ID firedrake
 RUN groupmod -g $GROUP_ID firedrake
 
 USER firedrake
+
+
 
 ENTRYPOINT ["/bin/bash", "-l", "-c", "source /home/firedrake/firedrake/bin/activate && /bin/bash"]
