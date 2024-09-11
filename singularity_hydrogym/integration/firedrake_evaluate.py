@@ -21,3 +21,9 @@ def postprocess_pinball(flow) -> tuple[float, float, float, float]:
     obs = flow.get_observations()
     cl = [float(cl_i) for cl_i in obs[:3]]
     return cl[0], cl[1], cl[2], mem_usage
+
+
+def postprocess_cylinder(flow) -> tuple[float, float, float]:
+    mem_usage = psutil.virtual_memory().percent
+    cl, cd = flow.get_observations()
+    return cl, cd, mem_usage

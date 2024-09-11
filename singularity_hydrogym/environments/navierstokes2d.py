@@ -596,7 +596,7 @@ if __name__ == "__main__":
     def main():
         # Test the Cavity environment
         seed = 0
-        name_flow = "pinball"
+        name_flow = "cylinder"
         max_control = 1.0
         reynolds = 50.0
         dt = 0.01

@@ -60,7 +60,7 @@ def get_hydrogym_paraview_callback(
 ) -> hydrogym.firedrake.io.ParaviewCallback:
     assert name_flow in LIST_STR_FLOWS, "Invalid flow name"
 
-    if name_flow in ["pinball", "cavity"]:
+    if name_flow in ["pinball", "cavity", "cylinder"]:
         function_firedrake_postprocess = get_firedrake_postprocess(name_flow)[0]
         # noinspection PyUnresolvedReferences
         hydrogym_paraview_callback = hydrogym.firedrake.io.ParaviewCallback(
@@ -102,6 +102,18 @@ def get_hydrogym_log_callback(
             print_fmt=str_log_callback,
             postprocess=function_firedrake_postprocess,  # pyright: ignore [reportArgumentType]
         )
+    elif name_flow == "cylinder":
+        function_firedrake_postprocess = get_firedrake_postprocess(name_flow)[1]
+        str_log_callback = (
+            "t: {0:0.2f},\t\t CL: {1:0.3f},\t\t CD: {2:0.03f}\t\t Mem: {3:0.1f}"
+        )
+        hydrogym_log_callback = hydrogym.firedrake.io.LogCallback(
+            nvals=3,
+            interval=interval,
+            filename=f"{path_callbacks}/log_callback.txt",
+            print_fmt=str_log_callback,
+            postprocess=function_firedrake_postprocess,  # pyright: ignore [reportArgumentType]
+        )
     else:
         raise NotImplementedError("This flow does not have a log callback yet")
     return hydrogym_log_callback
@@ -119,6 +131,11 @@ def get_firedrake_postprocess(name_flow: str) -> Tuple[Callable | None, ...]:
         return (
             None,
             firedrake_evaluate.postprocess_pinball,
+        )
+    elif name_flow == "cylinder":
+        return (
+            None,
+            firedrake_evaluate.postprocess_cylinder,
         )
     else:
         raise NotImplementedError("This flow does not have a postprocess yet")

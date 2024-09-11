@@ -18,17 +18,26 @@ def reynolds_curriculum(
 
     list_reynolds_cavity = [500, 1000, 2000, 4000, 7500]
     list_reynolds_pinball = [60, 80, 90, 100, 120, 130]
+    list_reynolds_cylinder = [100, 120, 130]
 
-    if name_flow == "cavity" and reynolds_number > 500:
+    if name_flow == "cavity" and reynolds_number > min(list_reynolds_cavity):
         # Extract sub-list of Reynolds numbers
         list_curriculum = [
             reynolds for reynolds in list_reynolds_cavity if reynolds < reynolds_number
         ]
         list_curriculum.append(reynolds_number)
-    elif name_flow == "pinball" and reynolds_number > 60:
+    elif name_flow == "pinball" and reynolds_number > min(list_reynolds_pinball):
         # Extract sub-list of Reynolds numbers
         list_curriculum = [
             reynolds for reynolds in list_reynolds_pinball if reynolds < reynolds_number
+        ]
+        list_curriculum.append(reynolds_number)
+    elif name_flow == "cylinder" and reynolds_number > min(list_reynolds_cylinder):
+        # Extract sub-list of Reynolds numbers
+        list_curriculum = [
+            reynolds
+            for reynolds in list_reynolds_cylinder
+            if reynolds < reynolds_number
         ]
         list_curriculum.append(reynolds_number)
     else:
