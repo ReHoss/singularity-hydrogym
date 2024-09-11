@@ -10,4 +10,4 @@ export PYTHONPATH="$PATH_CONTENT_ROOT"
 source "$PATH_VENV_FIREDRAKE"
 
 # Run the main script
-python3 "$PATH_CONTENT_ROOT/src/integration/main.py" --yaml "$PATH_CONTENT_ROOT/configs/cavity/cavity_reynolds-7500.yaml"
+python3 "$PATH_CONTENT_ROOT/singularity_hydrogym/integration/main.py" --yaml "$PATH_CONTENT_ROOT/configs/cavity/cavity_reynolds-7500.yaml"

@@ -168,3 +168,29 @@ def create_hydrogym_dict_config(
     }
 
     return env_config
+
+
+def create_navierstokes2d_dict_config(
+    dict_yaml_config: dict, path_output_data: str
+) -> dict:
+    assert "environment" in dict_yaml_config.keys()
+    assert "seed" in dict_yaml_config.keys()
+    assert "xp_name" in dict_yaml_config.keys()
+
+    dict_input_navierstokes2d = {
+        # Unpack the dictionary
+        **dict_yaml_config["environment"]["parameters"]["dict_pde_config"],
+        # Set seed and name of the flow
+        "seed": dict_yaml_config["seed"],
+        "name_flow": dict_yaml_config["environment"]["name"],
+        "dict_solver": dict_yaml_config["environment"]["parameters"]["dict_solver"],
+        "log_callback_interval": dict_yaml_config["environment"]["parameters"][
+            "dict_callback_config"
+        ]["dict_log_callback"]["interval"],
+        "paraview_callback_interval": dict_yaml_config["environment"]["parameters"][
+            "dict_callback_config"
+        ]["dict_paraview_callback"]["interval"],
+        "path_output_data": path_output_data,
+    }
+    # The above should match NavierStokesFlow2D.__init__ signature
+    return dict_input_navierstokes2d
