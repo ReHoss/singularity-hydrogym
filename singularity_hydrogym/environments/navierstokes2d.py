@@ -23,6 +23,14 @@ DICT_DEFAULT_INITIAL_CONDITION = {
 }
 
 
+DICT_DEFAULT_SOLVER = {
+    "name": "semi_implicit_bdf",
+    "dt": 0.0001,
+    "order": 3,
+    "stabilization": "gls",
+}
+
+
 class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, reportIncompatibleVariableOverride]
     hydrogym.FlowEnv,
     abstract_interface.EnvInterfaceControlDDE,
@@ -43,8 +51,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         path_hydrogym_checkpoint: Optional[str] = None,
         mesh: str = "coarse",
         actuator_integration: str = "explicit",
-        name_solver: str = "semi_implicit_bdf",
-        solver_dt=0.0001,
+        dict_solver: Optional[dict] = None,
         paraview_callback_interval: int = 10,
         log_callback_interval: int = 10,
         path_output_data: Optional[str] = None,
@@ -65,12 +72,15 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             path_hydrogym_checkpoint=path_hydrogym_checkpoint,
             mesh=mesh,
             actuator_integration=actuator_integration,
-            name_solver=name_solver,
-            solver_dt=solver_dt,
+            dict_solver=dict_solver,
             paraview_callback_interval=paraview_callback_interval,
             log_callback_interval=log_callback_interval,
             path_output_data=path_output_data,
         )
+
+        # Set solver dictionary
+        if dict_solver is None:
+            dict_solver = DICT_DEFAULT_SOLVER
 
         self.name_flow = name_flow
 
@@ -83,11 +93,13 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             name_flow=name_flow
         )
         self.dt = dt
-        self.solver_dt = solver_dt
-        self.max_control = max_control
 
+        self.max_control = max_control
         self.control_penalty = control_penalty
-        self.name_solver = name_solver
+
+        self.solver_dt: float = dict_solver["dt"]
+        self.name_solver: str = dict_solver["name"]
+        self.solver_order: int = dict_solver["order"]
         self.solver_class: Type[hydrogym.core.TransientSolver] = utils.get_solver(
             name_solver=self.name_solver
         )
@@ -98,6 +110,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         self.path_hydrogym_checkpoint = path_hydrogym_checkpoint
         self.actuator_integration = actuator_integration
 
+        self.tempfile_tempdir: Optional[tempfile.TemporaryDirectory] = None
         self.path_output_data = path_output_data
         self.check_or_create_path_output_data()
         # Set up the paraview callback
@@ -121,6 +134,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             "solver": self.solver_class,
             "solver_config": {
                 "dt": self.solver_dt,
+                "order": self.solver_order,
             },
             "callbacks": [self.paraview_callback, self.log_callback],
         }
@@ -194,6 +208,13 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         # the attribute before defining it in __init__; this flaw is due to the
         # fact PendulumEnv does not have a getter for state
 
+    def __del__(self):
+        """
+        Destructor takes care of cleaning up the temporary directory.
+        """
+        if self.tempfile_tempdir is not None:
+            self.tempfile_tempdir.cleanup()
+
     # noinspection PyMethodOverriding
     def reset(  # pyright: ignore [reportIncompatibleMethodOverride]
         self, seed: int, options: Optional[dict] = None
@@ -251,7 +272,10 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         self.iter = 0
         # That updates q0
         self.set_initial_condition()
-        self.flow.reset(q0=self.q0)  # pyright: ignore
+
+        # I suppose reset is not needed since the flow is reset
+        # in the set_initial_condition through the load_checkpoint
+        # self.flow.reset(q0=self.q0)  # pyright: ignore
         self.solver.reset()
         tuple_obs = self.flow.get_observations()
 
@@ -370,11 +394,16 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
                 "The path_output_data is not provided."
                 "Creating a temporary directory."
             )
-            self.path_output_data = tempfile.TemporaryDirectory().name
+            # noinspection PyAttributeOutsideInit
+            self.tempfile_tempdir = tempfile.TemporaryDirectory()
+            self.path_output_data = self.tempfile_tempdir.name
         else:
             # Check if the directory exists with pathlib
             path_output_data = pathlib.Path(self.path_output_data)
-            path_output_data.mkdir(exist_ok=False)
+            if not path_output_data.exists():
+                raise FileNotFoundError(
+                    f"The directory {self.path_output_data} does not exist."
+                )
 
     @property
     def array_control(self) -> npt.NDArray[np.floating] | None:
@@ -445,6 +474,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         """
         Set the initial condition of the environment.
         """
+        # TODO: self.hydrogym_checkpoint should be an initial condition mode!
         if self.dict_initial_condition["type"] == "equilibrium":
             fd_rng = firedrake.randomfunctiongen.Generator(
                 firedrake.randomfunctiongen.PCG64(seed=1234)
@@ -482,8 +512,6 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         else:
             raise ValueError("Invalid initial condition type")
 
-        # return
-
     @staticmethod
     def _check_arguments(
         name_flow: str,
@@ -497,8 +525,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         path_hydrogym_checkpoint: Optional[str],
         mesh: str,
         actuator_integration: str,
-        name_solver: str,
-        solver_dt: float,
+        dict_solver: Optional[dict],
         paraview_callback_interval: int,
         log_callback_interval: int,
         path_output_data: Optional[str],
@@ -527,17 +554,15 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             assert isinstance(
                 path_hydrogym_checkpoint, str
             ), "path_hydrogym_checkpoint must be a string."
+            raise NotImplementedError(
+                "The path_hydrogym_checkpoint is not implemented."
+            )
 
         assert mesh in ["coarse", "medium", "fine"], "mesh must be coarse or fine."
         assert actuator_integration in [
             "explicit",
             "implicit",
         ], "actuator_integration must be explicit or implicit."
-        assert name_solver in [
-            "semi_implicit_bdf",
-            "explicit_euler",
-        ], "name_solver must be semi_implicit_bdf or explicit_euler."
-        assert isinstance(solver_dt, float), "solver_dt must be a float."
         assert isinstance(
             paraview_callback_interval, int
         ), "paraview_callback_interval must be an int."
@@ -549,6 +574,16 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
                 path_output_data, str
             ), "path_output_data must be a string."
 
+        if dict_solver is None:
+            dict_solver = DICT_DEFAULT_SOLVER
+        name_solver = dict_solver["name"]
+        solver_dt = dict_solver["dt"]
+
+        assert name_solver in [
+            "semi_implicit_bdf",
+            "explicit_euler",
+        ], "name_solver must be semi_implicit_bdf or explicit_euler."
+        assert isinstance(solver_dt, float), "solver_dt must be a float."
         # Both dt should have a common divisor
         assert dt > 0, "dt must be positive."
         assert solver_dt > 0, "solver_dt must be positive."
@@ -563,7 +598,7 @@ if __name__ == "__main__":
         seed = 0
         name_flow = "pinball"
         max_control = 1.0
-        reynolds = 10.0
+        reynolds = 50.0
         dt = 0.01
         dtype = "float32"
         control_penalty = 0.0
@@ -572,10 +607,14 @@ if __name__ == "__main__":
         path_hydrogym_checkpoint = None
         mesh = "coarse"
         actuator_integration = "implicit"
-        name_solver = "semi_implicit_bdf"
-        solver_dt = 0.01
-        paraview_callback_interval = 5
-        log_callback_interval = 100
+        dict_solver = {
+            "name": "semi_implicit_bdf",
+            "dt": 0.01,
+            "order": 2,
+            "stabilization": "gls",
+        }
+        paraview_callback_interval = 10
+        log_callback_interval = 10
         path_output_data = None
 
         env = NavierStokesFlow2D(
@@ -591,8 +630,7 @@ if __name__ == "__main__":
             path_hydrogym_checkpoint=path_hydrogym_checkpoint,
             mesh=mesh,
             actuator_integration=actuator_integration,
-            name_solver=name_solver,
-            solver_dt=solver_dt,
+            dict_solver=dict_solver,
             paraview_callback_interval=paraview_callback_interval,
             log_callback_interval=log_callback_interval,
             path_output_data=path_output_data,
