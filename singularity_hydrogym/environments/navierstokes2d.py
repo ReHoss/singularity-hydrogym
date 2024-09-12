@@ -25,9 +25,9 @@ DICT_DEFAULT_INITIAL_CONDITION = {
 
 DICT_DEFAULT_SOLVER = {
     "name": "semi_implicit_bdf",
-    "dt": 0.0001,
-    "order": 3,
-    "stabilization": "gls",
+    "dt": 0.01,
+    "order": 2,
+    "stabilization": "none",
 }
 
 
@@ -39,10 +39,10 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
 
     def __init__(
         self,
-        seed: int,
-        name_flow: str = "cavity",
+        seed: int = 0,
+        name_flow: str = "pinball",
         max_control: float = 1.0,
-        reynolds: float = 7500.0,
+        reynolds: int | float = 30,
         dt: float = 0.001,
         dtype: str = "float32",
         control_penalty: float = 0.0,
@@ -102,11 +102,12 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         self.solver_dt: float = dict_solver["dt"]
         self.name_solver: str = dict_solver["name"]
         self.solver_order: int = dict_solver["order"]
+        self.solver_stabilization: str = dict_solver["stabilization"]
         self.solver_class: Type[hydrogym.core.TransientSolver] = utils.get_solver(
             name_solver=self.name_solver
         )
 
-        self.reynolds = reynolds
+        self.reynolds = float(reynolds)
         self.mesh = mesh
 
         self.path_hydrogym_checkpoint = path_hydrogym_checkpoint
@@ -137,6 +138,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             "solver_config": {
                 "dt": self.solver_dt,
                 "order": self.solver_order,
+                "stabilization": self.solver_stabilization,
             },
             "callbacks": [self.paraview_callback, self.log_callback],
         }
@@ -286,7 +288,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         # Cast the observation to the right dtype
         # From tuple to array
         self._array_observation = np.array(tuple_obs, dtype=self.np_dtype)
-        self._list_time_points.append(t0)
+        self._list_time_points = [t0]
         self._list_array_obs_history.append(self.array_observation)
         # Pyright type ignore since state is not implemented
         self._list_array_state_history.append(None)
@@ -537,7 +539,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         """
         assert isinstance(name_flow, str), "name_flow must be a string"
         assert isinstance(max_control, float), "max_control must be a float"
-        assert isinstance(reynolds, float), "reynolds must be a float"
+        assert isinstance(reynolds, (int, float)), "reynolds must be a number"
         assert isinstance(dt, float), "dt must be a float"
         assert dtype in ["float32", "float64"], "dtype must be float32 or float64"
         assert isinstance(control_penalty, float), "control_penalty must be a float"
@@ -600,7 +602,7 @@ if __name__ == "__main__":
         seed = 0
         name_flow = "cylinder"
         max_control = 1.0
-        reynolds = 50.0
+        reynolds = 30.0
         dt = 0.01
         dtype = "float32"
         control_penalty = 0.0
@@ -613,7 +615,7 @@ if __name__ == "__main__":
             "name": "semi_implicit_bdf",
             "dt": 0.01,
             "order": 2,
-            "stabilization": "gls",
+            "stabilization": "none",
         }
         paraview_callback_interval = 10
         log_callback_interval = 10
