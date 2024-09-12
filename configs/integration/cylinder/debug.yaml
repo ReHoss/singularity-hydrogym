@@ -1,0 +1,30 @@
+seed: 0  # Seed for reproducibility
+xp_name: cylinder_simulation_experiment  # Experiment name for MLFlow
+n_steps: 1.0e+4  # Number of simulation steps
+
+environment:
+  name: cylinder  # Flow environment name
+  parameters:
+    dict_pde_config:
+      dt: 0.01  # Time step size for the simulation
+      reynolds: 50.0  # Reynolds number of the flow
+      max_control: 1.0  # Maximum control value
+      control_penalty: 0.0  # Penalty for control actions
+      interdecision_time_dist: constant  # Distribution type for time between decisions
+      mesh: coarse  # Mesh resolution: coarse, medium, or fine
+      actuator_integration: implicit  # Actuator integration method: explicit or implicit
+      dict_initial_condition:  # Initial condition setup (can be None)
+        type: equilibrium
+        std: 0.1  # Standard deviation of noise for equilibrium initial condition
+
+    dict_solver:
+      name: semi_implicit_bdf  # Name of the solver
+      dt: 0.01  # Solver time step
+      order: 3  # Solver order
+
+    dict_callback_config:
+      dict_paraview_callback:
+        interval: 10  # Paraview callback interval for saving visualization data
+      dict_log_callback:
+        interval: 10  # Log callback interval for logging data
+

@@ -40,10 +40,10 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
     def __init__(
         self,
         seed: int,
-        name_flow: str = "cylinder",
+        name_flow: str = "cavity",
         max_control: float = 1.0,
         reynolds: float = 7500.0,
-        dt: float = 0.0001,
+        dt: float = 0.001,
         dtype: str = "float32",
         control_penalty: float = 0.0,
         interdecision_time_dist: str = "constant",
@@ -82,6 +82,8 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         if dict_solver is None:
             dict_solver = DICT_DEFAULT_SOLVER
 
+        # Get the path of this file to use as the root directory
+        self.path_current_file = pathlib.Path(__file__)
         self.name_flow = name_flow
 
         np_dtype = np.dtype(dtype)
@@ -496,7 +498,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         """
         if self.dict_initial_condition["type"] == "equilibrium":
             path_file_h5 = (
-                f"{utils.PATH_PROJECT_ROOT}/data/steady_state/{self.name_flow}/"
+                f"{self.path_current_file.parent}/data/steady_state/{self.name_flow}/"
                 f"{self.name_flow}_{int(self.reynolds)}_{self.mesh}_none/"
                 f"{int(self.reynolds)}_steady.h5"
             )
