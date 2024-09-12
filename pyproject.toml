@@ -3,7 +3,7 @@ requires = ["hatchling", "pip<=24.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "singularity-hydrogym"
+name = "singularity_hydrogym"
 version = "0.0.1"
 dependencies = [
     "gymnasium",
