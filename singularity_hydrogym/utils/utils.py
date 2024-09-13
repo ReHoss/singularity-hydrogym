@@ -211,7 +211,6 @@ def create_navierstokes2d_dict_config(
 ) -> dict:
     assert "environment" in dict_yaml_config.keys()
     assert "seed" in dict_yaml_config.keys()
-    assert "xp_name" in dict_yaml_config.keys()
 
     dict_input_navierstokes2d = {
         # Unpack the dictionary
