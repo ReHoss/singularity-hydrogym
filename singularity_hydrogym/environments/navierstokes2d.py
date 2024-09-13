@@ -289,7 +289,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         # From tuple to array
         self._array_observation = np.array(tuple_obs, dtype=self.np_dtype)
         self._list_time_points = [t0]
-        self._list_array_obs_history.append(self.array_observation)
+        self._list_array_obs_history = [self.array_observation]
         # Pyright type ignore since state is not implemented
         self._list_array_state_history.append(None)
         dict_info = {}
@@ -600,20 +600,20 @@ if __name__ == "__main__":
     def main():
         # Test the Cavity environment
         seed = 0
-        name_flow = "cylinder"
+        name_flow = "cavity"
         max_control = 1.0
-        reynolds = 30.0
-        dt = 0.01
+        reynolds = 7500.0
+        dt = 0.001
         dtype = "float32"
         control_penalty = 0.0
         interdecision_time_dist = "constant"
         dict_initial_condition = None
         path_hydrogym_checkpoint = None
         mesh = "coarse"
-        actuator_integration = "implicit"
+        actuator_integration = "explicit"
         dict_solver = {
             "name": "semi_implicit_bdf",
-            "dt": 0.01,
+            "dt": 0.001,
             "order": 2,
             "stabilization": "none",
         }
