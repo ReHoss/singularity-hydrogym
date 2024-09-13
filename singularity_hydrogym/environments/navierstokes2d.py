@@ -98,8 +98,8 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
 
         self.solver_dt: float = dict_solver["dt"]
         self.name_solver: str = dict_solver["name"]
-        self.solver_order: int = dict_solver["order"]
-        self.solver_stabilization: str = dict_solver["stabilization"]
+        self.solver_order: int = dict_solver.get("order", 2)
+        self.solver_stabilization: str = dict_solver.get("stabilization", "none")
         self.solver_class: Type[hydrogym.core.TransientSolver] = utils.get_solver(
             name_solver=self.name_solver
         )
@@ -597,7 +597,9 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         assert dt > 0, "dt must be positive."
         assert solver_dt > 0, "solver_dt must be positive."
         assert dt >= solver_dt, "dt must be greater than or equal to solver_dt."
-        assert dt % solver_dt == 0, "dt and solver_dt must have a common divisor."
+        assert np.isclose(
+            dt % solver_dt, 0
+        ), "dt and solver_dt must have a common divisor."
 
 
 if __name__ == "__main__":
