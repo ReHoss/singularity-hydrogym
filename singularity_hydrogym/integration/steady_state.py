@@ -18,7 +18,7 @@ def reynolds_curriculum(
 
     list_reynolds_cavity = [500, 1000, 2000, 4000, 7500]
     list_reynolds_pinball = [60, 80, 90, 100, 120, 130]
-    list_reynolds_cylinder = [100, 120, 130]
+    list_reynolds_cylinder = [50, 100, 120, 130]
 
     if name_flow == "cavity" and reynolds_number > min(list_reynolds_cavity):
         # Extract sub-list of Reynolds numbers

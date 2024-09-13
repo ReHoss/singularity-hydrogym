@@ -91,11 +91,6 @@ def main() -> None:
         # Create hydrogym environment
         gym_env = navierstokes2d.NavierStokesFlow2D(**dict_hydrogym_config)
 
-        # Add attributes to the environment for logging as Firedrake
-        # does not propagete enough information to the flow attribute for the
-        # logging callback
-        add_attributes(gym_env=gym_env)
-
         # Extract the config for the environment
         n_steps = dict_config["n_steps"]
         # Integrate
