@@ -40,19 +40,33 @@ def get_hydrogym_flow(name_flow: str) -> Type[hydrogym.firedrake.FlowConfig]:
         raise ValueError("Invalid flow name")
 
 
-def get_path_initial_vectorfield(name_flow: str) -> str | None:
+def get_path_initial_vectorfield(
+    name_flow: str,
+    type_initial_condition: str,
+    reynolds: int | float,
+    name_mesh: str,
+) -> str | None:
     assert name_flow in LIST_STR_FLOWS, "Invalid flow name"
-    if name_flow == "cavity":
-        return (
-            f"{PATH_PROJECT_ROOT}/data/initial_vector_field/cavity/"
-            f"reynolds-7500_mesh-coarse_checkpoint.h5"
+    # Check if reynolds has a float is still a natural number
+    if isinstance(reynolds, float) and (not reynolds.is_integer()):
+        raise ValueError("The Reynolds number must be a natural number")
+
+    if type_initial_condition == "equilibrium":
+        path_file_h5 = (
+            f"{PATH_PROJECT_ROOT}/singularity_hydrogym/"
+            f"environments/data/steady_state/{name_flow}/"
+            f"{name_flow}_{int(reynolds)}_{name_mesh}_none/"
+            f"{int(reynolds)}_steady.h5"
         )
-    elif name_flow in ["cylinder", "pinball", "backward_facing_step"]:
-        return None
+        # Check if the file exists
+        if not pathlib.Path(path_file_h5).exists():
+            raise FileNotFoundError(
+                f"The file {path_file_h5} which contains"
+                f" the initial condition does not exist."
+            )
+        return path_file_h5
     else:
-        raise NotImplementedError(
-            "This flow does not have" " an initial vectorfield yet"
-        )
+        raise NotImplementedError("This type of initial condition is unknown.")
 
 
 def get_hydrogym_paraview_callback(
@@ -154,7 +168,12 @@ def create_hydrogym_dict_config(
     dict_log_callback = dict_callback_config["dict_log_callback"]
 
     hydrogym_flow = get_hydrogym_flow(name_flow=name_flow)
-    path_initial_vectorfield = get_path_initial_vectorfield(name_flow=name_flow)
+    path_initial_vectorfield = get_path_initial_vectorfield(
+        name_flow=name_flow,
+        type_initial_condition=dict_pde_config["type_initial_condition"],
+        reynolds=dict_pde_config["reynolds"],
+        name_mesh=dict_pde_config["mesh"],
+    )
     dt = dict_pde_config["dt"]
 
     interval_paraview = dict_paraview_callback["interval"]

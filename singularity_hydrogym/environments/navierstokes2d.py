@@ -1,3 +1,5 @@
+import gc
+
 import firedrake  # pyright: ignore [reportMissingImports]
 import pathlib
 
@@ -48,7 +50,6 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         control_penalty: float = 0.0,
         interdecision_time_dist: str = "constant",
         dict_initial_condition: Optional[dict] = None,
-        path_hydrogym_checkpoint: Optional[str] = None,
         mesh: str = "coarse",
         actuator_integration: str = "explicit",
         dict_solver: Optional[dict] = None,
@@ -69,7 +70,6 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             control_penalty=control_penalty,
             interdecision_time_dist=interdecision_time_dist,
             dict_initial_condition=dict_initial_condition,
-            path_hydrogym_checkpoint=path_hydrogym_checkpoint,
             mesh=mesh,
             actuator_integration=actuator_integration,
             dict_solver=dict_solver,
@@ -91,9 +91,6 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         self.np_dtype = np_dtype
 
         self.hydrogym_flow = utils.get_hydrogym_flow(name_flow)
-        self.path_initial_vectorfield = utils.get_path_initial_vectorfield(
-            name_flow=name_flow
-        )
         self.dt = dt
 
         self.max_control = max_control
@@ -110,7 +107,6 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         self.reynolds = float(reynolds)
         self.mesh = mesh
 
-        self.path_hydrogym_checkpoint = path_hydrogym_checkpoint
         self.actuator_integration = actuator_integration
 
         self.tempfile_tempdir: Optional[tempfile.TemporaryDirectory] = None
@@ -125,6 +121,18 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         self.log_callback_interval = log_callback_interval
         self.log_callback: Optional[hydrogym.firedrake.io.LogCallback]
         self.log_callback = self.get_log_callback()
+
+        if dict_initial_condition is None:
+            self.dict_initial_condition = DICT_DEFAULT_INITIAL_CONDITION
+        else:
+            self.dict_initial_condition = dict_initial_condition
+        assert self.dict_initial_condition["type"] in [
+            "equilibrium",
+        ], "Initial condition type must be zero or nonzero"
+
+        self.path_initial_vectorfield = self.get_path_initial_vectorfield(
+            name_flow=name_flow
+        )
 
         self.dict_env_config = {
             "flow": self.hydrogym_flow,
@@ -174,17 +182,6 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             interdecision_time_dist=interdecision_time_dist,
         )
 
-        # No putting any adaptative stepsize controller even for Dopri5
-        # This is a delibarate choice to keep the system simple
-
-        if dict_initial_condition is None:
-            self.dict_initial_condition = DICT_DEFAULT_INITIAL_CONDITION
-        else:
-            self.dict_initial_condition = dict_initial_condition
-        assert self.dict_initial_condition["type"] in [
-            "equilibrium",
-        ], "Initial condition type must be zero or nonzero"
-
         # The below interface creates the mandatory attributes
         # This forces all environments to have the same interface
         abstract_interface.EnvInterfaceControlDDE.__init__(
@@ -218,6 +215,8 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         """
         if self.tempfile_tempdir is not None:
             self.tempfile_tempdir.cleanup()
+            # Trigger garbage collection
+        gc.collect()
 
     # noinspection PyMethodOverriding
     def reset(  # pyright: ignore [reportIncompatibleMethodOverride]
@@ -474,6 +473,20 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         # Add the attributes to the environment for logging (callback)
         setattr(self.flow, "dt", self.dt)
 
+    def get_path_initial_vectorfield(self, name_flow: str) -> Optional[str]:
+        if name_flow in ["cylinder", "pinball", "cavity"]:
+            if self.dict_initial_condition["type"] == "restart":
+                assert (
+                    "path" in self.dict_initial_condition
+                ), "The path to the restart file is not provided"
+                return self.dict_initial_condition["path"]
+            else:
+                return None
+        else:
+            raise NotImplementedError(
+                "This flow does not have" " an initial vectorfield yet"
+            )
+
     def set_initial_condition(self) -> None:
         """
         Set the initial condition of the environment.
@@ -526,7 +539,6 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         control_penalty: float,
         interdecision_time_dist: str,
         dict_initial_condition: Optional[dict],
-        path_hydrogym_checkpoint: Optional[str],
         mesh: str,
         actuator_integration: str,
         dict_solver: Optional[dict],
@@ -538,6 +550,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         Check the arguments of the constructor.
         """
         assert isinstance(name_flow, str), "name_flow must be a string"
+        assert name_flow in utils.LIST_STR_FLOWS, "Invalid flow name"
         assert isinstance(max_control, float), "max_control must be a float"
         assert isinstance(reynolds, (int, float)), "reynolds must be a number"
         assert isinstance(dt, float), "dt must be a float"
@@ -553,14 +566,6 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             assert isinstance(
                 dict_initial_condition, dict
             ), "dict_initial_condition must be a dict."
-
-        if path_hydrogym_checkpoint is not None:
-            assert isinstance(
-                path_hydrogym_checkpoint, str
-            ), "path_hydrogym_checkpoint must be a string."
-            raise NotImplementedError(
-                "The path_hydrogym_checkpoint is not implemented."
-            )
 
         assert mesh in ["coarse", "medium", "fine"], "mesh must be coarse or fine."
         assert actuator_integration in [
@@ -602,13 +607,12 @@ if __name__ == "__main__":
         seed = 0
         name_flow = "cavity"
         max_control = 1.0
-        reynolds = 7500.0
+        reynolds = 10.0
         dt = 0.001
         dtype = "float32"
         control_penalty = 0.0
         interdecision_time_dist = "constant"
         dict_initial_condition = None
-        path_hydrogym_checkpoint = None
         mesh = "coarse"
         actuator_integration = "explicit"
         dict_solver = {
@@ -631,7 +635,6 @@ if __name__ == "__main__":
             control_penalty=control_penalty,
             interdecision_time_dist=interdecision_time_dist,
             dict_initial_condition=dict_initial_condition,
-            path_hydrogym_checkpoint=path_hydrogym_checkpoint,
             mesh=mesh,
             actuator_integration=actuator_integration,
             dict_solver=dict_solver,
