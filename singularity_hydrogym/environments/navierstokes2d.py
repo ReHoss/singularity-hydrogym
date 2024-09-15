@@ -367,7 +367,13 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             ), "Interval must be provided"
 
         path_callbacks = f"{self.path_output_data}/paraview_callbacks"
-        pathlib.Path(path_callbacks).mkdir(parents=True)
+        # Trigger warning if the directory already exists
+        if pathlib.Path(path_callbacks).exists():
+            logging.warning(
+                f"The directory {path_callbacks} already exists."
+                "It will be overwritten."
+            )
+        pathlib.Path(path_callbacks).mkdir(parents=True, exist_ok=True)
         hydrogym_paraview_callback = utils.get_hydrogym_paraview_callback(
             name_flow=self.name_flow,
             path_callbacks=path_callbacks,
@@ -382,7 +388,13 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             raise ValueError("The path_output_data is not provided")
 
         path_callbacks = f"{self.path_output_data}/log_callbacks"
-        pathlib.Path(path_callbacks).mkdir(parents=True)
+        # Trigger warning if the directory already exists
+        if pathlib.Path(path_callbacks).exists():
+            logging.warning(
+                f"The directory {path_callbacks} already exists."
+                "It will be overwritten."
+            )
+        pathlib.Path(path_callbacks).mkdir(parents=True, exist_ok=True)
 
         hydrogym_log_callback = utils.get_hydrogym_log_callback(
             name_flow=self.name_flow,

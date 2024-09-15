@@ -1,3 +1,4 @@
+import gc
 from typing import Optional
 
 import pathlib
@@ -111,6 +112,11 @@ def compute_steady_state(
         # noinspection PyUnresolvedReferences
         pvd = fd.output.VTKFile(f"{path_output_data}/{reynolds_number}_steady.pvd")
         pvd.write(velocity, pressure, vorticity)
+
+    # Garbage collection etc.
+    del flow
+    del solver
+    gc.collect()
 
 
 if __name__ == "__main__":
