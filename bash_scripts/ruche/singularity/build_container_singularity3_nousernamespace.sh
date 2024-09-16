@@ -1,7 +1,3 @@
-# In Singularity 3, environment variables cannot be passed to the definition file .def dynamically.
-# Therefore, the user and group IDs must be hardcoded in the definition file.
-# The user and group IDs are passed in order to give the same permissions to the user in the container as on the host.
-
 PATH_PARENT=$( cd "$(dirname "${BASH_SOURCE[0]}")" || exit ; pwd -P )
 PATH_CONTENT_ROOT=$(realpath "$PATH_PARENT/../../..")
 
@@ -23,10 +19,3 @@ singularity build \
 --fakeroot \
 "$(readlink -f "$PATH_SIF_FILE")" \
 "$(readlink -f "$PATH_SINGULARITY_DEFINITION_FILE")"
-
-# If the getopts command is used, delete the temporary directory
-if [ -n "$opt" ]; then
-  rm -r "$TEMP_DIR"
-fi
-
-# https://github.com/apptainer/singularity/issues/5941

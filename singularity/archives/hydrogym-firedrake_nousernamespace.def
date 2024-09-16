@@ -47,4 +47,6 @@ export PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT=/home/firedrake/firedrake/bin/activ
 export URL_HYDROGYM=https://github.com/ReHoss/hydrogym.git@main
 
 %runscript
-exec /bin/bash -l
+cd /home/firedrake/mount_dir/project_root || exit
+exec /bin/bash -l -c ". /home/firedrake/firedrake/bin/activate && /bin/bash $*"
+
