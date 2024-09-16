@@ -12,7 +12,6 @@ singularity run \
   --no-home \
   --writable-tmpfs \
   --no-init \
-  --no-eval \
   --bind "$PATH_CONTENT_ROOT":"$PATH_CONTAINER_CONTENT_ROOT" \
   "$PATH_CONTAINER"
 
