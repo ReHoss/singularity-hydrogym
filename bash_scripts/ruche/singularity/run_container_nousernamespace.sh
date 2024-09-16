@@ -8,11 +8,18 @@ PATH_CONTAINER_CONTENT_ROOT="/home/firedrake/$NAME_MOUNT_DIR/project_root"
 NAME_CONTAINER="hydrogym-firedrake_nousernamespace_uid-1001_gid-1001_hostname-mecacpt80.sif"
 PATH_CONTAINER="$PATH_CONTENT_ROOT"/singularity/images/"$NAME_CONTAINER"
 
-singularity --debug run \
+
+# Firedrake writes to the cache directory that is replicated on the Singularity container
+# this triggers an OSError: [Errno 28] No space left on device
+PATH_HOME_DIR_RUCHE="/gpfs/users/hosseinkhanr"
+PATH_CACHE_DIR_RUCHE="$PATH_HOME_DIR_RUCHE"/.cache
+
+singularity run \
   --no-home \
   --writable-tmpfs \
   --no-init \
   --bind "$PATH_CONTENT_ROOT":"$PATH_CONTAINER_CONTENT_ROOT" \
+  --bind "$PATH_CACHE_DIR_RUCHE":"$PATH_CACHE_DIR_RUCHE" \
   "$PATH_CONTAINER"
 
 # --no-mount strings              disable one or more 'mount xxx' options set in singularity.conf, specify absolute destination path to disable a bind path entry, or 'bind-paths' to disable all bind path entries.
