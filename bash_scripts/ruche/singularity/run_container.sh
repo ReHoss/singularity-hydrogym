@@ -1,3 +1,5 @@
+module load singularity/3.8.3/gcc-11.2.0
+
 PATH_PARENT=$( cd "$(dirname "${BASH_SOURCE[0]}")" || exit ; pwd -P )
 PATH_CONTENT_ROOT=$(realpath "$PATH_PARENT/../../..")
 
