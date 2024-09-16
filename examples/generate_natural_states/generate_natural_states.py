@@ -10,7 +10,7 @@ import firedrake  # pyright: ignore [reportMissingImports]
 import pathlib
 
 LIST_ENVIRONMENTS = ["cylinder", "pinball", "cavity"]
-LIST_MESHES = ["coarse"]
+LIST_MESHES = ["fine"]
 # Reynolds for pinball include Luc Pastur paper choices
 
 DICT_LIST_REYNOLDS = {
@@ -56,10 +56,10 @@ def write_flow(
         if path_output_data is None:
             path_output_data = tmpfile
         # Save the solution
-        flow.save_checkpoint(f"{path_output_data}/{reynolds_number}_steady.h5")
+        flow.save_checkpoint(f"{path_output_data}/{reynolds_number}_natural.h5")
         # noinspection PyUnresolvedReferences
         pvd = firedrake.output.VTKFile(
-            f"{path_output_data}/{reynolds_number}_steady.pvd"
+            f"{path_output_data}/{reynolds_number}_natural.pvd"
         )
         pvd.write(velocity, pressure, vorticity)
 
