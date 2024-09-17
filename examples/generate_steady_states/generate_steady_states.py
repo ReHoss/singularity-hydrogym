@@ -3,15 +3,16 @@ from singularity_hydrogym.integration import steady_state
 import pathlib
 
 LIST_ENVIRONMENTS = ["cylinder", "pinball", "cavity"]
-LIST_MESHES = ["coarse"]
+LIST_MESHES = ["fine"]
 # Reynolds for pinball include Luc Pastur paper choices
 
 DICT_LIST_REYNOLDS = {
-    "cylinder": [10, 30, 50, 75, 90, 105, 120, 130],
-    "pinball": [10, 30, 50, 75, 90, 105, 120, 130],
-    "cavity": [10, 100, 500, 1000, 2000, 4000, 5000, 7500],
-    # "pinball": [],
-    # "cavity": [],
+    # "cylinder": [10, 30, 50, 75, 90, 105, 120, 130],
+    # "pinball": [10, 30, 50, 75, 90, 105, 120, 130],
+    # "cavity": [10, 100, 500, 1000, 2000, 4000, 5000, 7500],
+    "cavity": [5000, 7500],
+    "pinball": [],
+    "cylinder": [],
 }
 
 if __name__ == "__main__":

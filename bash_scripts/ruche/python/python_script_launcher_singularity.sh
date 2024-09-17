@@ -20,7 +20,7 @@ PATH_CONTAINER_CONTENT_ROOT="/home/firedrake/$NAME_MOUNT_DIR/project_root"
 NAME_CONTAINER="hydrogym-firedrake_nousernamespace_uid-1001_gid-1001_hostname-mecacpt80.sif"
 PATH_CONTAINER="$PATH_CONTENT_ROOT"/singularity/images/"$NAME_CONTAINER"
 
-PATH_PYTHON_SCRIPT="$PATH_CONTAINER_CONTENT_ROOT"/examples/generate_steady_states/generate_steady_states.py
+PATH_PYTHON_SCRIPT="$PATH_CONTAINER_CONTENT_ROOT"/examples/generate_natural_states/generate_natural_states.py
 
 # Firedrake writes to the cache directory that is replicated on the Singularity container
 # this triggers an OSError: [Errno 28] No space left on device
@@ -84,16 +84,16 @@ echo
 S_BATCH_CPU_PER_TASK=1
 
 # --- Time limit ---
-#S_BATCH_TIME=19:59:00
+S_BATCH_TIME=19:59:00
 #S_BATCH_TIME=3:59:00
 #S_BATCH_TIME=9:59:00
 #S_BATCH_TIME=59:00:00
-S_BATCH_TIME=00:40:00
+#S_BATCH_TIME=00:40:00
 
 # --- Partition ---
 #S_BATCH_PARTITION=cpu_short
-S_BATCH_PARTITION=cpu_med
-#S_BATCH_PARTITION=cpu_long  # (12 cores at 3.2 GHz), namely 48 cores per node
+#S_BATCH_PARTITION=cpu_med
+S_BATCH_PARTITION=cpu_long  # (12 cores at 3.2 GHz), namely 48 cores per node
 
 # --- Quality of service ---
 #S_BATCH_QOS=qos_cpu-t3
@@ -117,7 +117,7 @@ S_BATCH_N_TASKS_PER_NODE=1
 S_BATCH_GPUS=0
 
 # --- Memory per node ---
-#S_BATCH_MEM_PER_NODE
+S_BATCH_MEM_PER_NODE="16G"
 
 echo "sbatch options:"
 echo "  --job-name=$BASENAME_SCRIPT"
@@ -129,6 +129,7 @@ echo "  --cpus-per-task=$S_BATCH_CPU_PER_TASK"
 echo "  --time=$S_BATCH_TIME"
 echo "  --partition=$S_BATCH_PARTITION"
 echo "  --account=$S_BATCH_ACCOUNT"
+echo "  --mem=$S_BATCH_MEM_PER_NODE"
 echo "  --nodes=$S_BATCH_NODES"
 echo "  --ntasks-per-node=$S_BATCH_N_TASKS_PER_NODE"
 echo "  --gres=gpu:$S_BATCH_GPUS"
@@ -142,6 +143,7 @@ sbatch \
   --error="$PATH_LOG_DIR"/%j.err \
   --export=PATH_PYTHON_SCRIPT="$PATH_PYTHON_SCRIPT",ARGS_PYTHON_SCRIPT="$ARGS_PYTHON_SCRIPT",PATH_CONTAINER="$PATH_CONTAINER",PATH_CONTENT_ROOT="$PATH_CONTENT_ROOT",PATH_CONTAINER_CONTENT_ROOT="$PATH_CONTAINER_CONTENT_ROOT",PATH_CACHE_DIR_HPC="$PATH_CACHE_DIR_HPC" \
   --cpus-per-task="$S_BATCH_CPU_PER_TASK" \
+  --mem="$S_BATCH_MEM_PER_NODE" \
   --time="$S_BATCH_TIME" \
   --partition="$S_BATCH_PARTITION" \
   "$PATH_PARENT"/slurm_script/"$NAME_JOB_SCRIPT"

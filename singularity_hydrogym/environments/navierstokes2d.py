@@ -24,7 +24,6 @@ DICT_DEFAULT_INITIAL_CONDITION = {
     "std": 0.1,
 }
 
-
 DICT_DEFAULT_SOLVER = {
     "name": "semi_implicit_bdf",
     "dt": 0.01,
@@ -61,9 +60,8 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         Constructor for the Cavity environment.
         """
 
-        # Set solver dictionary
-        if dict_solver is None:
-            dict_solver = DICT_DEFAULT_SOLVER
+        # Set solver dictionary defaults
+        dict_solver = self._set_dict_solver_defaults(dict_solver)
 
         self._check_arguments(
             name_flow=name_flow,
@@ -208,6 +206,16 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         # self.state = self.state  # Otherwise, pyright will complain about setting
         # the attribute before defining it in __init__; this flaw is due to the
         # fact PendulumEnv does not have a getter for state
+
+    @staticmethod
+    def _set_dict_solver_defaults(dict_solver: dict[str, Any] | None) -> dict[str, Any]:
+        if dict_solver is None:
+            dict_solver = DICT_DEFAULT_SOLVER
+        else:
+            # Fill the missing keys with the default values
+            for key, value in DICT_DEFAULT_SOLVER.items():
+                dict_solver.setdefault(key, value)
+        return dict_solver
 
     def __del__(self):
         """
