@@ -45,7 +45,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         name_flow: str = "pinball",
         max_control: float = 1.0,
         reynolds: int | float = 30,
-        dt: float = 0.001,
+        dt: float = 0.01,
         dtype: str = "float32",
         control_penalty: float = 0.0,
         interdecision_time_dist: str = "constant",
@@ -60,6 +60,10 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         """
         Constructor for the Cavity environment.
         """
+
+        # Set solver dictionary
+        if dict_solver is None:
+            dict_solver = DICT_DEFAULT_SOLVER
 
         self._check_arguments(
             name_flow=name_flow,
@@ -77,10 +81,6 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             log_callback_interval=log_callback_interval,
             path_output_data=path_output_data,
         )
-
-        # Set solver dictionary
-        if dict_solver is None:
-            dict_solver = DICT_DEFAULT_SOLVER
 
         # Get the path of this file to use as the root directory
         self.path_current_file = pathlib.Path(__file__)
@@ -213,9 +213,13 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         """
         Destructor takes care of cleaning up the temporary directory.
         """
-        if self.tempfile_tempdir is not None:
-            self.tempfile_tempdir.cleanup()
-            # Trigger garbage collection
+        try:
+            if self.tempfile_tempdir is not None:
+                self.tempfile_tempdir.cleanup()
+                # Trigger garbage collection
+        except AttributeError:
+            logging.info(f"{self.__class__} has no tempfile_tempdir to clean up.")
+
         gc.collect()
 
     # noinspection PyMethodOverriding
