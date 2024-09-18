@@ -27,20 +27,6 @@ PATH_PYTHON_SCRIPT="$PATH_CONTAINER_CONTENT_ROOT"/examples/generate_natural_stat
 PATH_HOME_DIR_HPC="/gpfs/users/hosseinkhanr"
 PATH_CACHE_DIR_HPC="$PATH_HOME_DIR_HPC"/.cache
 
-
-
-# Get the venv name from the command line
-V_ENV_NAME="venv_control_dde"
-# Get the path of the virtual environment
-PATH_VENV_BIN="$PATH_CONTENT_ROOT"/venv/"$V_ENV_NAME"/bin/activate
-echo PATH_VENV_BIN: "$PATH_VENV_BIN"
-echo
-# Activate the virtual environment, if working echo the name of the venv
-# shellcheck source=/home/hosseinkhan/Documents/work/phd/git_repositories/doe4rl/venv/venv_control_dde/bin/activate
-source "$PATH_VENV_BIN" && echo "Activation of virtual environment: $V_ENV_NAME"
-echo
-
-
 # Get the folder name from the command line, and the arguments to pass to the python script
 while getopts 'p:a:' flag; do
   case "${flag}" in

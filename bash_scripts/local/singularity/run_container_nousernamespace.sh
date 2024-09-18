@@ -6,7 +6,7 @@ PATH_CONTAINER_CONTENT_ROOT="/home/firedrake/$NAME_MOUNT_DIR/project_root"
 NAME_CONTAINER="hydrogym-firedrake_nousernamespace_uid-1001_gid-1001_hostname-mecacpt80.sif"
 PATH_CONTAINER="$PATH_CONTENT_ROOT"/singularity/images/"$NAME_CONTAINER"
 
-singularity --debug run \
+singularity run \
   --no-home \
   --writable-tmpfs \
   --no-init \
