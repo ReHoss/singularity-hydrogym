@@ -10,7 +10,7 @@ import firedrake  # pyright: ignore [reportMissingImports]
 import pathlib
 
 LIST_ENVIRONMENTS = ["cylinder", "pinball", "cavity"]
-LIST_MESHES = ["fine", "coarse"]
+LIST_MESHES = ["medium", "coarse"]
 # Reynolds for pinball include Luc Pastur paper choices
 
 DICT_LIST_REYNOLDS = {
@@ -127,6 +127,10 @@ if __name__ == "__main__":
             reynolds_number = dict_pde_config["reynolds"]
             name_mesh_resolution = dict_pde_config["mesh"]
             stabilization = dict_env["parameters"]["dict_solver"]["stabilization"]
+
+            # There is no medium mesh for the pinball, so we skip it
+            if name_flow == "pinball" and name_mesh_resolution == "medium":
+                continue
 
             print(
                 f"Computing natural state for {name_flow} at Re={reynolds_number} "
