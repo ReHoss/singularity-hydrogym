@@ -77,6 +77,7 @@ if __name__ == "__main__":
     # Generate the dictionary of parameters
     def main():
         stabilization = "none"
+        std_initial_condition = 0.1
         list_dictionary_parameters = [
             {
                 "seed": 0,
@@ -94,7 +95,7 @@ if __name__ == "__main__":
                             "actuator_integration": "explicit",
                             "dict_initial_condition": {
                                 "type": "equilibrium",
-                                "std": 0.1,
+                                "std": std_initial_condition,
                             },
                         },
                         "dict_solver": {
