@@ -3,16 +3,16 @@ from singularity_hydrogym.integration import steady_state
 import pathlib
 
 LIST_ENVIRONMENTS = ["cylinder", "pinball", "cavity"]
-LIST_MESHES = ["fine"]
+LIST_MESHES = ["medium"]
 # Reynolds for pinball include Luc Pastur paper choices
 
 DICT_LIST_REYNOLDS = {
-    # "cylinder": [10, 30, 50, 75, 90, 105, 120, 130],
-    # "pinball": [10, 30, 50, 75, 90, 105, 120, 130],
-    # "cavity": [10, 100, 500, 1000, 2000, 4000, 5000, 7500],
-    "cavity": [5000, 7500],
-    "pinball": [],
-    "cylinder": [],
+    "cylinder": [10, 30, 50, 75, 90, 105, 120, 130],
+    "pinball": [10, 30, 50, 75, 90, 105, 120, 130],
+    "cavity": [10, 100, 500, 1000, 2000, 4000, 5000, 7500],
+    # "cavity": [5000, 7500],
+    # "pinball": [],
+    # "cylinder": [],
 }
 
 if __name__ == "__main__":
@@ -39,6 +39,10 @@ if __name__ == "__main__":
             name_mesh_resolution = dictionary_parameters["name_mesh_resolution"]
             stabilization = dictionary_parameters["stabilization"]
             solver_parameters = dictionary_parameters["solver_parameters"]
+
+            # There is no medium mesh for the pinball, so we skip it
+            if name_flow == "pinball" and name_mesh_resolution == "medium":
+                continue
 
             print(
                 f"Computing steady state for {name_flow} at Re={reynolds_number} "
