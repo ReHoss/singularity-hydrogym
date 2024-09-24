@@ -101,7 +101,7 @@ singularity exec \
   --no-init \
   --bind "$PATH_CONTENT_ROOT":"$PATH_CONTAINER_CONTENT_ROOT" \
   --bind "$PATH_CACHE_DIR_HPC":"$PATH_CACHE_DIR_HPC" \
-  "$PATH_CONTAINER" /bin/bash -c ". /home/firedrake/firedrake/bin/activate && cd $PATH_CONTAINER_CONTENT_ROOT && python $PATH_PYTHON_SCRIPT" "${LIST_ARGS_PYTHON_SCRIPT[@]}"
+  "$PATH_CONTAINER" /bin/bash -c ". /home/firedrake/firedrake/bin/activate && cd $PATH_CONTAINER_CONTENT_ROOT && python $PATH_PYTHON_SCRIPT \"\$@\"" -- "${LIST_ARGS_PYTHON_SCRIPT[@]}"
 
 echo
 #singularity exec <container.sif> /bin/bash -c "source /path/to/venv/bin/activate && python your_script.py"

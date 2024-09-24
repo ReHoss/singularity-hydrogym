@@ -67,6 +67,7 @@ echo
 
 # Set defaults values for the sbatch options
 # --- Number of CPUs per task ---
+#S_BATCH_CPU_PER_TASK=8
 S_BATCH_CPU_PER_TASK=1
 
 # --- Time limit ---
@@ -104,6 +105,7 @@ S_BATCH_GPUS=0
 
 # --- Memory per node ---
 S_BATCH_MEM_PER_NODE="16G"
+#S_BATCH_MEM_PER_NODE="2G"
 
 echo "sbatch options:"
 echo "  --job-name=$BASENAME_SCRIPT"
