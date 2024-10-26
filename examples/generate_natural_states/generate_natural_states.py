@@ -10,7 +10,7 @@ import firedrake  # pyright: ignore [reportMissingImports]
 import pathlib
 
 LIST_ENVIRONMENTS = ["cylinder", "pinball", "cavity"]
-LIST_MESHES = ["medium", "coarse"]
+LIST_MESHES = ["coarse"]
 # Reynolds for pinball include Luc Pastur paper choices
 
 DICT_LIST_REYNOLDS = {
@@ -26,9 +26,9 @@ DICT_DT = {
 }
 
 DICT_DURATION_SECONDS = {
-    "cylinder": 20.0,
-    "pinball": 20.0,
-    "cavity": 20.0,
+    "cylinder": 60.0,
+    "pinball": 60.0,
+    "cavity": 60.0,
 }
 
 

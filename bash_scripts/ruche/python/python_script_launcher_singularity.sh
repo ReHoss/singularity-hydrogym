@@ -68,10 +68,10 @@ echo
 # Set defaults values for the sbatch options
 # --- Number of CPUs per task ---
 #S_BATCH_CPU_PER_TASK=8
-S_BATCH_CPU_PER_TASK=1
+S_BATCH_CPU_PER_TASK=8
 
 # --- Time limit ---
-S_BATCH_TIME=19:59:00
+S_BATCH_TIME=48:00:00
 #S_BATCH_TIME=3:59:00
 #S_BATCH_TIME=9:59:00
 #S_BATCH_TIME=59:00:00
