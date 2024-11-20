@@ -88,7 +88,7 @@ if __name__ == "__main__":
                         "dict_pde_config": {
                             "dt": DICT_DT[name_flow],
                             "reynolds": reynolds,
-                            "max_control": 1.0,
+                            "max_control": 0.0,  # To make no control is applied
                             "control_penalty": 0.0,
                             "interdecision_time_dist": "constant",
                             "mesh": name_mesh_resolution,
