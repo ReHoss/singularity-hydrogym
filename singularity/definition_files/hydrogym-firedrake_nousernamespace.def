@@ -7,50 +7,59 @@ authors="hosseinkhan"
 
 %post
 
-# Source the firedrake environment
+# Source the Firedrake environment
 PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT=/home/firedrake/firedrake/bin/activate
+
+# Install git-lfs for handling large files in HydroGym
+apt-get update && apt-get install -y git-lfs && git lfs install && apt-get clean
+
+# Clone and install HydroGym with mesh files using git-lfs
+/bin/bash -c "source $PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT && \
+    pip install --upgrade pip==24.0 && \
+    git clone https://github.com/ReHoss/hydrogym.git /home/firedrake/hydrogym && \
+    cd /home/firedrake/hydrogym && \
+    git checkout origin/feature/add_back_coarse_meshes && \
+    git lfs fetch --all && \
+    pip install ."
+
+# Install additional Python packages
+/bin/bash -c "source $PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT && \
+    pip install gymnasium \
+                jsonschema \
+                matplotlib \
+                mlflow==1.27.0 \
+                numpy \
+                pandas \
+                pyyaml \
+                sb3-contrib \
+                scipy \
+                tensorboard \
+                tqdm"
 
 # Create a directory for mounting
 mkdir -p /home/firedrake/mount_dir/project_root/
-
-/bin/bash -c "source $PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT && \
-pip install --upgrade pip==24.0 && \
-pip install gymnasium \
-git+https://github.com/ReHoss/hydrogym.git@feature/add_back_coarse_meshes \
-jsonschema \
-matplotlib \
-mlflow==1.27.0 \
-numpy \
-pandas \
-pyyaml \
-sb3-contrib \
-scipy \
-tensorboard \
-tqdm \
-"
-
-mkdir -p /home/firedrake/mount_dir/project_root
-cd /home/firedrake/mount_dir/project_root
-
-# Set the PYTHONPATH
-PYTHONPATH="/home/firedrake/mount_dir/project_root:$PYTHONPATH"
-
-# PRINT THE CURRENT ENVIRONMENT TO THE TERMINAL
-/bin/bash -c "echo 'Current python: $(which python)' && \
-echo 'Current pip: $(which pip)' && \
-echo 'Current python version: $(python --version)' && \
-echo 'Current pip version: $(pip --version)' && \
-echo 'Current pip list: $(pip list)'"
 
 %post
 # Firedrake chmod approach
 # Set firedrake directory useable by all users
 chmod -R o+rwx /home/firedrake
 
+# Set the PYTHONPATH
+PYTHONPATH="/home/firedrake/mount_dir/project_root:$PYTHONPATH"
+
+# Print environment details for verification
+/bin/bash -c "echo 'Current python: $(which python)' && \
+    echo 'Current pip: $(which pip)' && \
+    echo 'Current python version: $(python --version)' && \
+    echo 'Current pip version: $(pip --version)' && \
+    echo 'Current pip list: $(pip list)'"
+
 %environment
+# Set up environment variables for runtime
 export PATH_FIREDRAKE_VENV_ACTIVATION_SCRIPT=/home/firedrake/firedrake/bin/activate
 export PYTHONPATH="/home/firedrake/mount_dir/project_root:$PYTHONPATH"
 
 %runscript
+# Activate the Firedrake environment and run any provided command
 cd /home/firedrake/mount_dir/project_root || exit
 exec /bin/bash -l -c ". /home/firedrake/firedrake/bin/activate && /bin/bash $*"
