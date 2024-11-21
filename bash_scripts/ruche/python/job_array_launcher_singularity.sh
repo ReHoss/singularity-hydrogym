@@ -3,7 +3,7 @@
 # Name of the project
 NAME_PROJECT="singularity-hydrogym"
 # Name of the job script
-NAME_JOB_SCRIPT="run_python_script_singularity.slurm"
+NAME_JOB_ARRAY_SCRIPT="job_array_batch_xp_singularity.slurm"
 
 PATH_PARENT=$(
   cd "$(dirname "${BASH_SOURCE[0]}")" || exit
@@ -40,7 +40,7 @@ if [ -z "$NAME_FOLDER_CONFIGS" ]; then
   exit
 fi
 
-PATH_FOLDER_CONFIGS="$PATH_CONTENT_ROOT"/config/batch/"$NAME_FOLDER_CONFIGS"
+PATH_FOLDER_CONFIGS="$PATH_CONTENT_ROOT"/configs/batch/"$NAME_FOLDER_CONFIGS"
 
 echo "Config folder: $PATH_FOLDER_CONFIGS"
 echo
@@ -62,7 +62,7 @@ mkdir -p "$PATH_LOG_DIR"/"$CONFIG_FILE_NAME"
 export MLFLOW_TRACKING_URI=file:"$PATH_CONTENT_ROOT"/data/mlruns
 
 # Launch the job array script
-echo "Launching $NAME_JOB_SCRIPT"
+echo "Launching $NAME_JOB_ARRAY_SCRIPT"
 echo
 
 # Transform the relative paths to absolute paths
@@ -79,7 +79,7 @@ echo
 # Set defaults values for the sbatch options
 # --- Number of CPUs per task ---
 #S_BATCH_CPU_PER_TASK=8
-S_BATCH_CPU_PER_TASK=8
+S_BATCH_CPU_PER_TASK=4
 
 # --- Time limit ---
 S_BATCH_TIME=48:00:00
