@@ -16,7 +16,7 @@ import yaml
 text_yaml_config_file = """
 mlflow_experiment_name: "hydrogym_simulation_cavity_30s_natural_flow"
 seed: 0
-env:
+environment:
   name: "cavity"
   parameters:
     dict_pde_config:
@@ -82,7 +82,7 @@ N_SEEDS = 1
 LIST_REYNOLDS = [10, 100, 500, 1000, 2000, 4000, 5000, 7500]
 
 list_reynolds = [
-    ("env", "parameters", "dict_pde_config", "reynolds", reynolds)
+    ("environment", "parameters", "dict_pde_config", "reynolds", reynolds)
     for reynolds in LIST_REYNOLDS
 ]
 
@@ -108,12 +108,14 @@ for tuple_parameters in itertools.product(*nested_list_parameters):
         nested_dict[nested_keys[-1]] = value
 
     # Create the name of the config file
-    env_name = dict_config_new["env"]["name"]
+    env_name = dict_config_new["environment"]["name"]
 
     seed = dict_config_new["seed"]
-    name_env = dict_config_new["env"]["name"]
+    name_env = dict_config_new["environment"]["name"]
     duration_seconds = dict_config_new["duration_seconds"]
-    reynolds = dict_config_new["env"]["parameters"]["dict_pde_config"]["reynolds"]
+    reynolds = dict_config_new["environment"]["parameters"]["dict_pde_config"][
+        "reynolds"
+    ]
 
     name_config_file = "".join(
         f"env_name_{name_env}"

@@ -1,7 +1,7 @@
 mlflow_experiment_name: "hydrogym_simulation_debug"
 seed: 0
-env:
-  name: "cavity"
+environment:
+  name: cavity"
   parameters:
     dict_pde_config:
       dt: 0.01

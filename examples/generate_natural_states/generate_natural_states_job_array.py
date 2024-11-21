@@ -128,7 +128,7 @@ def run_simulation_natural_state(
                 path_output_data=path_generated_data, dict_config=dict_config
             )
 
-        dict_env = dict_config["env"]
+        dict_env = dict_config["environment"]
         dict_pde_config = dict_env["parameters"]["dict_pde_config"]
         name_flow = dict_env["name"]
         reynolds_number = dict_pde_config["reynolds"]
