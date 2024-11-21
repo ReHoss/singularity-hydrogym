@@ -1,0 +1,28 @@
+mlflow_experiment_name: "hydrogym_simulation_debug"
+seed: 0
+env:
+  name: "cavity"
+  parameters:
+    dict_pde_config:
+      dt: 0.01
+      reynolds: 5000
+      max_control: 0.0
+      control_penalty: 0.0
+      interdecision_time_dist: "constant"
+      mesh: "coarse"
+      actuator_integration: "explicit"
+      dict_initial_condition:
+        type: "equilibrium"
+        std: 0.1
+    dict_solver:
+      name: "semi_implicit_bdf"
+      dt: 0.01
+      order: 3
+      stabilization: "none"
+    dict_callback_config:
+      dict_paraview_callback:
+        interval: 10
+      dict_log_callback:
+        interval: 10
+
+duration_seconds: 0.8
