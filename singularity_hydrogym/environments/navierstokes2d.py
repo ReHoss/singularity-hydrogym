@@ -17,7 +17,7 @@ import numpy as np
 import numpy.typing as npt
 
 # TODO: tests
-
+# TODO: WARNING THE INTERFACE IS CALLED EnvInterfaceControlDDE....
 
 DICT_DEFAULT_INITIAL_CONDITION = {
     "type": "equilibrium",
@@ -576,7 +576,9 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         """
         assert isinstance(name_flow, str), "name_flow must be a string"
         assert name_flow in utils.LIST_STR_FLOWS, "Invalid flow name"
-        assert isinstance(max_control, float), "max_control must be a float"
+        assert (
+            isinstance(max_control, float) or max_control is None
+        ), "max_control must be a float or None"
         assert isinstance(reynolds, (int, float)), "reynolds must be a number"
         assert isinstance(dt, float), "dt must be a float"
         assert dtype in ["float32", "float64"], "dtype must be float32 or float64"
@@ -632,9 +634,9 @@ if __name__ == "__main__":
     def main():
         # Test the Cavity environment
         seed = 0
-        name_flow = "cavity"
+        name_flow = "cylinder"
         max_control = 1.0
-        reynolds = 10.0
+        reynolds = 90.0
         dt = 0.001
         dtype = "float32"
         control_penalty = 0.0
