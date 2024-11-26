@@ -126,7 +126,9 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
             self.dict_initial_condition = dict_initial_condition
         assert self.dict_initial_condition["type"] in [
             "equilibrium",
-        ], "Initial condition type must be zero or nonzero"
+            "ergodic",
+            "restart",
+        ], "Wrong initial condition type"
 
         self.path_initial_vectorfield = self.get_path_initial_vectorfield(
             name_flow=name_flow
@@ -509,7 +511,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
                 return None
         else:
             raise NotImplementedError(
-                "This flow does not have" " an initial vectorfield yet"
+                "This flow does not have" " an initial vector field yet"
             )
 
     def set_initial_condition(self) -> None:
@@ -517,7 +519,7 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
         Set the initial condition of the environment.
         """
         # TODO: self.hydrogym_checkpoint should be an initial condition mode!
-        if self.dict_initial_condition["type"] == "equilibrium":
+        if self.dict_initial_condition["type"] in ["equilibrium", "ergodic"]:
             fd_rng = firedrake.randomfunctiongen.Generator(
                 firedrake.randomfunctiongen.PCG64(seed=1234)
             )
@@ -550,7 +552,20 @@ class NavierStokesFlow2D(  # pyright: ignore [reportIncompatibleMethodOverride, 
                     f" the initial condition does not exist."
                 )
             return path_file_h5
+        elif self.dict_initial_condition["type"] == "ergodic":
+            path_file_h5 = (
+                f"{self.path_current_file.parent}/data/natural_state/{self.name_flow}/"
+                f"{self.name_flow}_{int(self.reynolds)}_{self.mesh}_none/"
+                f"{int(self.reynolds)}_natural.h5"
+            )
 
+            # Check if the file exists
+            if not pathlib.Path(path_file_h5).exists():
+                raise FileNotFoundError(
+                    f"The file {path_file_h5} which contains"
+                    f" the initial condition does not exist."
+                )
+            return path_file_h5
         else:
             raise ValueError("Invalid initial condition type")
 
@@ -641,7 +656,7 @@ if __name__ == "__main__":
         dtype = "float32"
         control_penalty = 0.0
         interdecision_time_dist = "constant"
-        dict_initial_condition = None
+        dict_initial_condition = {"type": "ergodic", "std": 0.1}
         mesh = "coarse"
         actuator_integration = "explicit"
         dict_solver = {
