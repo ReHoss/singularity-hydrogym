@@ -38,5 +38,5 @@ classifiers = [
 [tool.hatch.build]
 include = ["singularity_hydrogym/*"]
 
-[tool.hatch.metadata] # Allows to install Github repositoires (error otherwise)
+[tool.hatch.metadata] # Allows to install GitHub repositoires (error otherwise)
 allow-direct-references = true
